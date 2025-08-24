@@ -5,7 +5,9 @@ description = ""
 authors = ["Your Name <you@example.com>"]
 requires-python = ">=3.11"
 dependencies = [
-    "python-dotenv>=1.1.1",
-    "anthropic>=0.18.0",
+    "anthropic>=0.25.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "yfinance>=0.2.0",
     "requests>=2.31.0",
 ]

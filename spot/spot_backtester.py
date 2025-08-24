@@ -1,109 +1,11 @@
-class AggressiveBacktester:
-    def __init__(self, symbol, start_date, end_date, initial_capital, commission_rate, slippage_rate):
-        self.symbol = symbol
-        self.start_date = start_date
-        self.end_date = end_date
-        self.initial_capital = initial_capital
-        self.commission_rate = commission_rate
-        self.slippage_rate = slippage_rate
-        self.trades = []
-        self.equity = pd.DataFrame(index=self.get_data().index)
-        self.equity['holdings'] = 0.0
-        self.equity['cash'] = self.initial_capital
-        self.equity['total'] = self.initial_capital
-        self.equity['returns'] = 0.0
 
-    def get_data(self):
-        df = yf.download(self.symbol, start=self.start_date, end=self.end_date)
-        return df
-
-    def backtest(self):
-        data = self.get_data()
-        signals = self.generate_signals(data)
-        self.execute_trades(data, signals)
-        self.calculate_equity(data)
-        return self.equity
-
-    def generate_signals(self, data):
-        # Implement your trading strategy here
-        # For example, a simple moving average crossover strategy
-        short_window = 50
-        long_window = 200
-
-        signals = pd.DataFrame(index=data.index)
-        signals['signal'] = 0.0
-
-        signals['short_mavg'] = data['Close'].rolling(window=short_window, min_periods=1).mean()
-        signals['long_mavg'] = data['Close'].rolling(window=long_window, min_periods=1).mean()
-
-        signals['signal'][short_window:] = np.where(signals['short_mavg'][short_window:] > signals['long_mavg'][short_window:], 1.0, 0.0)
-        signals['positions'] = signals['signal'].diff()
-
-        return signals
-
-    def execute_trades(self, data, signals):
-        for i in range(len(signals)):
-            if signals['positions'].iloc[i] == 1:  # Buy signal
-                self.enter_trade(data, i, 'long')
-            elif signals['positions'].iloc[i] == -1:  # Sell signal
-                self.enter_trade(data, i, 'short')
-
-    def enter_trade(self, data, index, order_type):
-        current_price = data['Close'].iloc[index]
-        date = data.index[index]
-        order_size = 0
-        cost = 0
-
-        if order_type == 'long':
-            if self.equity['cash'].iloc[index-1] > 0:
-                order_size = self.equity['cash'].iloc[index-1] / current_price
-                cost = order_size * current_price * (1 + self.commission_rate)
-                self.trades.append({'date': date, 'type': 'buy', 'price': current_price, 'size': order_size})
-                self.equity.loc[date, 'holdings'] = order_size
-                self.equity.loc[date, 'cash'] = self.equity['cash'].iloc[index-1] - cost
-            else:
-                pass # Not enough cash to buy
-
-        elif order_type == 'short':
-            # For simplicity, we are not implementing short selling in this example.
-            # If you want to implement short selling, you would need to manage short positions and their PnL.
-            pass
-
-    def exit_trade(self, data, index, order_type):
-        current_price = data['Close'].iloc[index]
-        date = data.index[index]
-
-        if order_type == 'long':
-            if self.equity['holdings'].iloc[index-1] > 0:
-                order_size = self.equity['holdings'].iloc[index-1]
-                revenue = order_size * current_price * (1 - self.commission_rate)
-                self.trades.append({'date': date, 'type': 'sell', 'price': current_price, 'size': order_size})
-                self.equity.loc[date, 'holdings'] = 0
-                self.equity.loc[date, 'cash'] = self.equity['cash'].iloc[index-1] + revenue
-            else:
-                pass # No holdings to sell
-
-        elif order_type == 'short':
-            # Not implementing short selling exit here
-            pass
-
-    def calculate_equity(self, data):
-        for i in range(len(data)):
-            date = data.index[i]
-            current_price = data['Close'].iloc[i]
-
-            if i > 0:
-                self.equity.loc[date, 'holdings'] = self.equity['holdings'].iloc[i-1]
-                self.equity.loc[date, 'cash'] = self.equity['cash'].iloc[i-1]
-                self.equity.loc[date, 'returns'] = (self.equity['holdings'].iloc[i-1] * current_price) - (self.equity['holdings'].iloc[i-1] * data['Close'].iloc[i-1])
-
-            self.equity.loc[date, 'total'] = self.equity['holdings'].iloc[i] * current_price + self.equity['cash'].iloc[i]
-
-        self.equity['returns'] = self.equity['total'].pct_change().fillna(0)
-
+import pandas as pd
+import numpy as np
+import yfinance as yf
+from datetime import datetime, timedelta
 
 class SpotBacktester:
-    def __init__(self, symbol, start_date, end_date, initial_capital, commission_rate, slippage_rate):
+    def __init__(self, symbol=None, start_date=None, end_date=None, initial_capital=10000, commission_rate=0.001, slippage_rate=0.001):
         self.symbol = symbol
         self.start_date = start_date
         self.end_date = end_date
@@ -111,26 +13,114 @@ class SpotBacktester:
         self.commission_rate = commission_rate
         self.slippage_rate = slippage_rate
         self.trades = []
-        self.equity = pd.DataFrame(index=self.get_data().index)
-        self.equity['holdings'] = 0.0
-        self.equity['cash'] = self.initial_capital
-        self.equity['total'] = self.initial_capital
-        self.equity['returns'] = 0.0
+        self.balance = initial_capital
+        self.holdings = {}
+        
+        if symbol and start_date and end_date:
+            # 히스토리컬 백테스팅용
+            self.equity = pd.DataFrame(index=self.get_data().index)
+            self.equity['holdings'] = 0.0
+            self.equity['cash'] = self.initial_capital
+            self.equity['total'] = self.initial_capital
+            self.equity['returns'] = 0.0
 
     def get_data(self):
+        """야후 파이낸스에서 데이터 가져오기"""
+        if not self.symbol:
+            return pd.DataFrame()
         df = yf.download(self.symbol, start=self.start_date, end=self.end_date)
         return df
 
+    def buy(self, asset_or_price, price_or_quantity, quantity=None):
+        """매수 주문"""
+        if quantity is None:
+            # 간단한 매수 (asset, price, quantity)
+            asset, price, quantity = asset_or_price, price_or_quantity, quantity
+            cost = price * quantity * (1 + self.commission_rate)
+            if self.balance >= cost:
+                self.balance -= cost
+                self.holdings[asset] = self.holdings.get(asset, 0) + quantity
+                self.trades.append({
+                    'type': 'buy', 
+                    'asset': asset, 
+                    'price': price, 
+                    'quantity': quantity, 
+                    'cost': cost,
+                    'timestamp': datetime.now()
+                })
+                print(f"Bought {quantity} of {asset} at ${price}. Balance: ${self.balance:.2f}")
+            else:
+                print("Insufficient balance to buy.")
+        else:
+            # 히스토리컬 백테스팅용
+            price, quantity = asset_or_price, price_or_quantity
+            cost = price * quantity * (1 + self.commission_rate)
+            if self.balance >= cost:
+                self.balance -= cost
+                self.holdings['position'] = self.holdings.get('position', 0) + quantity
+                self.trades.append({
+                    'type': 'buy', 
+                    'price': price, 
+                    'quantity': quantity, 
+                    'cost': cost,
+                    'timestamp': datetime.now()
+                })
+
+    def sell(self, asset_or_price, price_or_quantity, quantity=None):
+        """매도 주문"""
+        if quantity is None:
+            # 간단한 매도
+            asset, price, quantity = asset_or_price, price_or_quantity, quantity
+            if asset in self.holdings and self.holdings[asset] >= quantity:
+                revenue = price * quantity * (1 - self.commission_rate)
+                self.balance += revenue
+                self.holdings[asset] -= quantity
+                if self.holdings[asset] == 0:
+                    del self.holdings[asset]
+                self.trades.append({
+                    'type': 'sell', 
+                    'asset': asset, 
+                    'price': price, 
+                    'quantity': quantity, 
+                    'revenue': revenue,
+                    'timestamp': datetime.now()
+                })
+                print(f"Sold {quantity} of {asset} at ${price}. Balance: ${self.balance:.2f}")
+            else:
+                print(f"Insufficient holdings of {asset} to sell.")
+        else:
+            # 히스토리컬 백테스팅용
+            price, quantity = asset_or_price, price_or_quantity
+            if self.holdings.get('position', 0) >= quantity:
+                revenue = price * quantity * (1 - self.commission_rate)
+                self.balance += revenue
+                self.holdings['position'] -= quantity
+                self.trades.append({
+                    'type': 'sell', 
+                    'price': price, 
+                    'quantity': quantity, 
+                    'revenue': revenue,
+                    'timestamp': datetime.now()
+                })
+
     def backtest(self):
+        """전체 백테스팅 실행"""
+        if not self.symbol:
+            print("Symbol not set for historical backtesting")
+            return None
+            
         data = self.get_data()
+        if data.empty:
+            print("No data available")
+            return None
+            
         signals = self.generate_signals(data)
         self.execute_trades(data, signals)
         self.calculate_equity(data)
         return self.equity
 
     def generate_signals(self, data):
-        # Implement your trading strategy here
-        # For example, a simple moving average crossover strategy
+        """거래 신호 생성 (이동평균 교차 전략)"""
         short_window = 50
         long_window = 200
 
@@ -140,58 +130,58 @@ class SpotBacktester:
         signals['short_mavg'] = data['Close'].rolling(window=short_window, min_periods=1).mean()
         signals['long_mavg'] = data['Close'].rolling(window=long_window, min_periods=1).mean()
 
-        signals['signal'][short_window:] = np.where(signals['short_mavg'][short_window:] > signals['long_mavg'][short_window:], 1.0, 0.0)
+        signals['signal'][short_window:] = np.where(
+            signals['short_mavg'][short_window:] > signals['long_mavg'][short_window:], 
+            1.0, 0.0
+        )
         signals['positions'] = signals['signal'].diff()
 
         return signals
 
     def execute_trades(self, data, signals):
-        for i in range(len(signals)):
+        """거래 실행"""
+        for i in range(1, len(signals)):
             if signals['positions'].iloc[i] == 1:  # Buy signal
                 self.enter_trade(data, i, 'long')
             elif signals['positions'].iloc[i] == -1:  # Sell signal
-                self.exit_trade(data, i, 'short') # Corrected from enter_trade to exit_trade for sell signal
+                self.exit_trade(data, i, 'long')
 
     def enter_trade(self, data, index, order_type):
+        """포지션 진입"""
         current_price = data['Close'].iloc[index]
         date = data.index[index]
-        order_size = 0
-        cost = 0
 
-        if order_type == 'long':
-            if self.equity['cash'].iloc[index-1] > 0:
-                order_size = self.equity['cash'].iloc[index-1] / current_price
-                cost = order_size * current_price * (1 + self.commission_rate)
-                self.trades.append({'date': date, 'type': 'buy', 'price': current_price, 'size': order_size})
-                self.equity.loc[date, 'holdings'] = order_size
-                self.equity.loc[date, 'cash'] = self.equity['cash'].iloc[index-1] - cost
-            else:
-                pass # Not enough cash to buy
-
-        elif order_type == 'short':
-            # For simplicity, we are not implementing short selling in this example.
-            # If you want to implement short selling, you would need to manage short positions and their PnL.
-            pass
+        if order_type == 'long' and self.equity['cash'].iloc[index-1] > 0:
+            order_size = self.equity['cash'].iloc[index-1] / current_price
+            cost = order_size * current_price * (1 + self.commission_rate)
+            self.trades.append({
+                'date': date, 
+                'type': 'buy', 
+                'price': current_price, 
+                'size': order_size
+            })
+            self.equity.loc[date, 'holdings'] = order_size
+            self.equity.loc[date, 'cash'] = self.equity['cash'].iloc[index-1] - cost
 
     def exit_trade(self, data, index, order_type):
+        """포지션 종료"""
         current_price = data['Close'].iloc[index]
         date = data.index[index]
 
-        if order_type == 'long':
-            if self.equity['holdings'].iloc[index-1] > 0:
-                order_size = self.equity['holdings'].iloc[index-1]
-                revenue = order_size * current_price * (1 - self.commission_rate)
-                self.trades.append({'date': date, 'type': 'sell', 'price': current_price, 'size': order_size})
-                self.equity.loc[date, 'holdings'] = 0
-                self.equity.loc[date, 'cash'] = self.equity['cash'].iloc[index-1] + revenue
-            else:
-                pass # No holdings to sell
-
-        elif order_type == 'short':
-            # Not implementing short selling exit here
-            pass
+        if order_type == 'long' and self.equity['holdings'].iloc[index-1] > 0:
+            order_size = self.equity['holdings'].iloc[index-1]
+            revenue = order_size * current_price * (1 - self.commission_rate)
+            self.trades.append({
+                'date': date, 
+                'type': 'sell', 
+                'price': current_price, 
+                'size': order_size
+            })
+            self.equity.loc[date, 'holdings'] = 0
+            self.equity.loc[date, 'cash'] = self.equity['cash'].iloc[index-1] + revenue
 
     def calculate_equity(self, data):
+        """자산 곡선 계산"""
         for i in range(len(data)):
             date = data.index[i]
             current_price = data['Close'].iloc[i]
@@ -199,8 +189,37 @@ class SpotBacktester:
             if i > 0:
                 self.equity.loc[date, 'holdings'] = self.equity['holdings'].iloc[i-1]
                 self.equity.loc[date, 'cash'] = self.equity['cash'].iloc[i-1]
-                self.equity.loc[date, 'returns'] = (self.equity['holdings'].iloc[i-1] * current_price) - (self.equity['holdings'].iloc[i-1] * data['Close'].iloc[i-1])
 
-            self.equity.loc[date, 'total'] = self.equity['holdings'].iloc[i] * current_price + self.equity['cash'].iloc[i]
+            self.equity.loc[date, 'total'] = (
+                self.equity['holdings'].iloc[i] * current_price + 
+                self.equity['cash'].iloc[i]
+            )
 
         self.equity['returns'] = self.equity['total'].pct_change().fillna(0)
+
+    def get_performance(self):
+        """성과 분석"""
+        if hasattr(self, 'equity') and not self.equity.empty:
+            # 히스토리컬 백테스팅 결과
+            final_value = self.equity['total'].iloc[-1]
+            return {
+                'initial_capital': self.initial_capital,
+                'final_value': final_value,
+                'total_trades': len(self.trades),
+                'profit_loss': final_value - self.initial_capital,
+                'returns': self.equity['returns'].tolist()
+            }
+        else:
+            # 실시간 거래 결과
+            total_holdings_value = sum(quantity * 45000 for quantity in self.holdings.values())
+            return {
+                'initial_capital': self.initial_capital,
+                'final_balance': self.balance,
+                'holdings_value': total_holdings_value,
+                'total_value': self.balance + total_holdings_value,
+                'total_trades': len(self.trades),
+                'profit_loss': (self.balance + total_holdings_value) - self.initial_capital
+            }
+
+# 하위 호환성을 위한 별칭
+AggressiveBacktester = SpotBacktester

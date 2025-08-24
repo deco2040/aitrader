@@ -45,3 +45,30 @@ class ClaudeMarketIntelligence:
             'recommendation': 'HOLD',
             'data': market_data
         }
+import json
+from datetime import datetime
+
+class ClaudeMarketIntelligence:
+    def __init__(self, claude_api_key: str):
+        self.claude_api_key = claude_api_key
+    
+    def analyze_market(self, symbol: str) -> dict:
+        """시장 분석"""
+        return {
+            'symbol': symbol,
+            'analysis': 'Market intelligence analysis',
+            'timestamp': datetime.now().isoformat()
+        }
+
+class MarketDataCollector:
+    def __init__(self):
+        pass
+    
+    def collect_data(self, symbol: str) -> dict:
+        """시장 데이터 수집"""
+        return {
+            'symbol': symbol,
+            'price': 45000,
+            'volume': 1000000,
+            'timestamp': datetime.now().isoformat()
+        }

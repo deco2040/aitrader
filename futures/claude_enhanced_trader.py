@@ -7,7 +7,7 @@ import json
 import time
 from datetime import datetime
 
-class ClaudeEnhancedTrader:
+class ClaudeEnhancedTraderTrader:
     """
     Claude AI Enhanced Trading System
     """
@@ -118,3 +118,12 @@ class ClaudeEnhancedTrader:
                 'confidence': 0,
                 'reasoning': f'응답 파싱 오류: {str(e)}'
             }
+    
+    def get_intelligent_trading_signal(self, symbol: str) -> dict:
+        """지능형 거래 신호 생성"""
+        return self.analyze_market_with_claude(symbol)
+    
+    def get_market_narrative(self, symbol: str) -> str:
+        """시장 해석 생성"""
+        analysis = self.analyze_market_with_claude(symbol)
+        return analysis.get('reasoning', 'No narrative available')
