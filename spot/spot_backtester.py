@@ -227,7 +227,7 @@ class SpotBacktester:
             for asset, quantity in self.holdings.items():
                 if isinstance(quantity, (int, float)) and quantity > 0:
                     price = default_prices.get(asset, 100)  # 기본값 100
-                    total_holdings_value += float(quantity) * price
+                    total_holdings_value += float(quantity) * float(price)
 
             return {
                 'initial_capital': self.initial_capital,

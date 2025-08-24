@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
@@ -19,7 +18,7 @@ class FuturesBacktester:
         if price <= 0 or quantity <= 0:
             print(f"❌ 잘못된 입력값: price={price}, quantity={quantity}")
             return False
-            
+
         cost = price * quantity * (1 + self.commission_rate)
         if self.balance >= cost:
             self.balance -= cost
@@ -66,7 +65,7 @@ class FuturesBacktester:
             'cash': self.balance,
             'position_value': self.position * 45000
         })
-        
+
         # 최대 손실폭 계산
         if current_total > self.peak_balance:
             self.peak_balance = current_total
@@ -80,10 +79,10 @@ class FuturesBacktester:
         total_value = self.balance + (self.position * 45000)  # 현재가 가정
         profit_loss = total_value - self.initial_capital
         roi = (profit_loss / self.initial_capital) * 100
-        
+
         winning_trades = [t for t in self.trades if t['type'] == 'sell' and 'revenue' in t]
         losing_trades = [t for t in self.trades if t['type'] == 'sell' and 'revenue' in t]
-        
+
         return {
             'initial_capital': self.initial_capital,
             'final_balance': self.balance,
@@ -100,7 +99,7 @@ class FuturesBacktester:
     def generate_report(self):
         """상세 보고서 생성"""
         performance = self.get_performance()
-        
+
         report = f"""
 === 백테스팅 성과 보고서 ===
 초기 자본: ${performance['initial_capital']:,.2f}
