@@ -103,16 +103,36 @@ class ClaudeEnhancedTrader:
         RISK PARAMETERS: Maximum 20% drawdown tolerance, intelligent liquidation management
         APPROACH: Aggressive but calculated, position splitting for risk control
         
-        Synthesize the following analysis for final trading decision:
+        STEP-BY-STEP FINAL DECISION SYNTHESIS:
         
+        STEP 1: ANALYZE ALL DATA INPUTS
         Market Analysis: {json.dumps(market_analysis, indent=2)}
         Social Sentiment: {json.dumps(social_analysis, indent=2)}
         Volatility Prediction: {json.dumps(volatility_prediction, indent=2)}
+        
+        STEP 2: LEVERAGE CALCULATION & OPTIMIZATION
+        - Calculate optimal leverage based on current volatility
+        - Determine leverage adjustment triggers
+        - Set maximum safe leverage limits
+        - Plan real-time leverage modifications
+        
+        STEP 3: POSITION SIZING STRATEGY
+        - Determine if single entry or position splitting is optimal
+        - Calculate risk per individual position
+        - Set position size scaling rules
+        
+        STEP 4: REAL-TIME STRATEGY ADAPTATION PLANNING
+        - Define conditions for strategy modifications
+        - Set leverage increase/decrease triggers
+        - Plan position size adjustments
+        - Define exit strategy modifications
         
         Make the final trading decision considering:
         - Can we achieve 0.1-0.3% profit in next 2-6 hours?
         - Should we split positions (3-5 entries) or go with single large position?
         - Current liquidation distance vs profit potential
+        - Dynamic leverage optimization (5x-20x based on conditions)
+        - Real-time strategy modification triggers
         - Optimal position size to stay within 20% risk while maximizing profit
         
         Final Decision JSON:
@@ -126,6 +146,49 @@ class ClaudeEnhancedTrader:
                 "second_entry": 0.2-0.4,
                 "third_entry": 0.1-0.3
             }},
+            "dynamic_leverage_strategy": {{
+                "initial_leverage": 5-20,
+                "max_leverage": 5-20,
+                "leverage_scaling_conditions": {{
+                    "increase_triggers": ["low_volatility", "strong_trend", "high_confidence"],
+                    "decrease_triggers": ["high_volatility", "uncertainty", "news_risk"],
+                    "modification_timeframes": "5min/15min/30min/1h"
+                }},
+                "leverage_adjustment_rules": {{
+                    "volatility_based": "decrease_on_spike/increase_on_calm",
+                    "trend_based": "increase_on_momentum/decrease_on_reversal",
+                    "time_based": "reduce_near_funding/increase_optimal_sessions"
+                }}
+            }},
+            "real_time_modifications": {{
+                "position_scaling": {{
+                    "add_on_profit_conditions": ["price_target_hit", "momentum_increase"],
+                    "reduce_on_loss_conditions": ["stop_hit", "momentum_decrease"],
+                    "scaling_percentages": {{
+                        "profit_add": 0.1-0.3,
+                        "loss_reduce": 0.2-0.5
+                    }}
+                }},
+                "stop_loss_adjustments": {{
+                    "trailing_conditions": ["profit_threshold_reached", "momentum_maintained"],
+                    "tightening_triggers": ["volatility_increase", "session_end"],
+                    "widening_triggers": ["false_breakout", "noise_detected"]
+                }},
+                "take_profit_modifications": {{
+                    "partial_exit_levels": [25, 50, 75],
+                    "runner_conditions": ["strong_momentum", "volume_confirmation"],
+                    "full_exit_triggers": ["reversal_signal", "time_limit"]
+                }}
+            }},
+            "strategy_adaptation_plan": {{
+                "monitoring_intervals": "1min/5min/15min",
+                "adaptation_triggers": {{
+                    "market_condition_change": "trend_reversal/volatility_spike/volume_anomaly",
+                    "risk_threshold_breach": "drawdown_limit/leverage_limit/time_limit",
+                    "opportunity_enhancement": "momentum_increase/volatility_decrease/news_catalyst"
+                }},
+                "modification_priorities": ["risk_management", "profit_optimization", "strategy_efficiency"]
+            }},
             "stop_loss_tight": "price for quick scalps",
             "stop_loss_wide": "price for swing positions", 
             "take_profit_targets": {{
@@ -136,12 +199,18 @@ class ClaudeEnhancedTrader:
             "max_hold_time": "15min/1h/4h/12h",
             "leverage_usage": 5-20,
             "liquidation_buffer": "percentage distance to liquidation",
-            "reasoning": "detailed justification focusing on profit probability and risk management",
+            "reasoning": "detailed step-by-step justification focusing on profit probability, risk management, and adaptive strategy",
             "profit_expectation": "expected percentage gain in specified timeframe",
             "risk_factors": ["factor1", "factor2"],
             "exit_conditions": ["condition1", "condition2"],
             "session_preference": "asia/europe/us/any",
-            "funding_strategy": "hold_through/exit_before"
+            "funding_strategy": "hold_through/exit_before",
+            "next_review_schedule": {{
+                "immediate": "1-5 minutes for entry execution",
+                "short_term": "15-30 minutes for position adjustments", 
+                "medium_term": "1-2 hours for strategy validation",
+                "long_term": "4-6 hours for full reassessment"
+            }}
         }}
         """
         

@@ -37,17 +37,131 @@ class ClaudeMarketIntelligence:
         Recent News:
         {json.dumps(news_data, indent=2)}
         
+        ANALYZE THE DATA STEP-BY-STEP:
+        
+        STEP 1: PRICE ACTION ANALYSIS
+        - Current price trend (1h, 4h, 12h timeframes)
+        - Support/resistance levels identification
+        - Volume profile analysis
+        - Price momentum indicators (RSI, MACD divergences)
+        
+        STEP 2: MARKET STRUCTURE EVALUATION
+        - Market phase identification (accumulation/distribution/trending)
+        - Order book analysis (bid/ask imbalances)
+        - Funding rate implications
+        - Open interest changes
+        
+        STEP 3: NEWS & SENTIMENT IMPACT ASSESSMENT
+        - News sentiment scoring (-100 to +100)
+        - Social media sentiment analysis
+        - Correlation with price movements
+        - Expected impact duration (1h/4h/12h/24h+)
+        
+        STEP 4: VOLATILITY & RISK ANALYSIS
+        - Current volatility percentile
+        - Expected volatility in next 1-4 hours
+        - Liquidation cascade risk assessment
+        - Market maker vs retail sentiment
+        
+        STEP 5: LEVERAGE OPTIMIZATION
+        - Calculate optimal leverage based on:
+          * Current market volatility
+          * Distance to liquidation
+          * Account balance utilization
+          * Expected move size
+        - Dynamic leverage adjustment (5x-20x scale)
+        - Risk-per-trade calculation
+        
+        STEP 6: TIMING ANALYSIS
+        - Current market session characteristics
+        - Funding time proximity (00:00, 08:00, 16:00 UTC)
+        - Optimal entry/exit windows
+        - Session transition volatility patterns
+        
+        STEP 7: POSITION STRATEGY FORMULATION
+        - Entry strategy (single/split/DCA approach)
+        - Position sizing per entry
+        - Stop-loss placement strategy
+        - Take-profit ladder setup
+        
+        STEP 8: REAL-TIME STRATEGY ADAPTATION
+        - Market condition changes monitoring
+        - Leverage adjustment triggers
+        - Position size modification conditions
+        - Exit strategy modifications
+        
         Provide analysis considering:
         
         1. IMMEDIATE PROFIT OPPORTUNITIES (next 1-4 hours for 0.1-0.3% gains)
         2. POSITION SPLITTING STRATEGY (multiple entries vs single large position)
-        3. LIQUIDATION DISTANCE CALCULATION (current margin vs liquidation price)
-        4. 24-HOUR MARKET CYCLES (Asia/Europe/US sessions and funding times)
-        5. VOLATILITY EXPLOITATION (how to profit from price swings)
-        6. RISK-REWARD OPTIMIZATION (targeting 0.5% daily with <20% max loss)
+        3. DYNAMIC LEVERAGE CALCULATION (5x-20x based on market conditions)
+        4. LIQUIDATION DISTANCE OPTIMIZATION (minimum 25% buffer)
+        5. 24-HOUR MARKET CYCLES (Asia/Europe/US sessions and funding times)
+        6. VOLATILITY EXPLOITATION (how to profit from price swings)
+        7. RISK-REWARD OPTIMIZATION (targeting 0.5% daily with <20% max loss)
+        8. REAL-TIME STRATEGY MODIFICATION (adaptive to changing conditions)
         
         Respond in JSON format:
         {{
+            "step_by_step_analysis": {{
+                "step1_price_action": {{
+                    "trend_1h": "bullish/bearish/neutral",
+                    "trend_4h": "bullish/bearish/neutral",
+                    "trend_12h": "bullish/bearish/neutral",
+                    "support_levels": [price1, price2, price3],
+                    "resistance_levels": [price1, price2, price3],
+                    "momentum_score": 0-100
+                }},
+                "step2_market_structure": {{
+                    "market_phase": "accumulation/distribution/trending/ranging",
+                    "order_book_imbalance": "buy_heavy/sell_heavy/balanced",
+                    "funding_rate_impact": "positive/negative/neutral",
+                    "open_interest_change": "increasing/decreasing/stable"
+                }},
+                "step3_news_sentiment": {{
+                    "news_sentiment_score": -100 to 100,
+                    "social_sentiment_score": -100 to 100,
+                    "correlation_strength": 0-100,
+                    "impact_duration": "1h/4h/12h/24h+"
+                }},
+                "step4_volatility_risk": {{
+                    "volatility_percentile": 0-100,
+                    "expected_volatility_1h": 0-100,
+                    "expected_volatility_4h": 0-100,
+                    "liquidation_cascade_risk": "low/medium/high/extreme",
+                    "market_participant_bias": "retail_heavy/smart_money/balanced"
+                }},
+                "step5_leverage_optimization": {{
+                    "current_market_volatility": 0-100,
+                    "optimal_leverage": 5-20,
+                    "max_safe_leverage": 5-20,
+                    "risk_per_trade": 0-5,
+                    "leverage_adjustment_trigger": "volatility_increase/volatility_decrease/trend_change/news_impact"
+                }},
+                "step6_timing_analysis": {{
+                    "current_session": "asia/europe/america",
+                    "session_characteristics": "high_volume/low_volume/volatile/stable",
+                    "funding_time_proximity": "immediate/near/far",
+                    "optimal_entry_window": "now/1h/2h/4h/wait"
+                }},
+                "step7_position_strategy": {{
+                    "entry_approach": "single_entry/split_3/split_5/dca_ladder",
+                    "position_size_distribution": {{
+                        "first_entry": 0.3-0.6,
+                        "second_entry": 0.2-0.4,
+                        "third_entry": 0.1-0.3
+                    }},
+                    "stop_loss_strategy": "tight_scalp/swing_wide/trailing",
+                    "take_profit_approach": "partial_scaling/full_exit/hold_runner"
+                }},
+                "step8_adaptation_triggers": {{
+                    "leverage_increase_conditions": ["condition1", "condition2"],
+                    "leverage_decrease_conditions": ["condition1", "condition2"],
+                    "position_size_increase": ["trigger1", "trigger2"],
+                    "position_size_decrease": ["trigger1", "trigger2"],
+                    "strategy_pivot_signals": ["signal1", "signal2"]
+                }}
+            }},
             "market_sentiment": "aggressive_bullish/moderate_bullish/neutral/moderate_bearish/aggressive_bearish",
             "confidence": 0-100,
             "profit_probability_4h": 0-100,
@@ -55,8 +169,14 @@ class ClaudeMarketIntelligence:
             "position_sizing_strategy": "single_large/split_3_entries/split_5_entries/dca_approach",
             "liquidation_risk": "low/medium/high/extreme",
             "margin_utilization": 0-100,
+            "dynamic_leverage": {{
+                "current_optimal": 5-20,
+                "max_allowed": 5-20,
+                "adjustment_reason": "volatility/trend/news/risk",
+                "next_review": "15min/30min/1h/2h"
+            }},
             "action_recommendation": "aggressive_long/moderate_long/scalp_long/hold/scalp_short/moderate_short/aggressive_short",
-            "reasoning": "detailed analysis focusing on profit opportunity and risk management",
+            "reasoning": "detailed step-by-step analysis summary focusing on profit opportunity and risk management",
             "entry_levels": {{
                 "primary": price,
                 "secondary": price,
@@ -67,7 +187,12 @@ class ClaudeMarketIntelligence:
             "session_timing": "optimal/suboptimal/avoid",
             "funding_impact": "positive/neutral/negative",
             "volatility_score": 0-100,
-            "market_regime": "trending_up/trending_down/ranging/volatile_up/volatile_down"
+            "market_regime": "trending_up/trending_down/ranging/volatile_up/volatile_down",
+            "real_time_modifications": {{
+                "leverage_adjustment_plan": "increase_on_volatility/decrease_on_volatility/maintain",
+                "position_scaling_plan": "add_on_profit/reduce_on_loss/pyramid_up",
+                "exit_modification": "tighten_stops/widen_stops/trail_profits"
+            }}
         }}
         """
         
