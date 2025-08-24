@@ -1,3 +1,4 @@
+
 """
 선물 거래 설정 파일
 """
@@ -33,4 +34,25 @@ TIME_BASED_CONFIG = {
     "asian_session": [0, 1, 2, 3, 4, 5, 6, 7, 8],
     "european_session": [8, 9, 10, 11, 12, 13, 14, 15],
     "american_session": [13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+}
+
+# 시간대별 레버리지 설정 (누락된 부분 추가)
+TIME_BASED_LEVERAGE = {
+    "high_volume_hours": [7, 8, 9, 13, 14, 15, 21, 22, 23],
+    "low_volume_hours": [0, 1, 2, 3, 4, 5, 6],
+    "high_volume_leverage": 1.5,
+    "low_volume_leverage": 0.8
+}
+
+# 수수료 및 펀딩 시간 설정 (누락된 부분 추가)
+FEES = {
+    "commission_rate": 0.0004,
+    "funding_times": [0, 8, 16]  # UTC 기준
+}
+
+# 스캘핑 모드 설정 (누락된 부분 추가)
+SCALPING_MODE = {
+    "enabled": False,
+    "min_profit_target": 0.5,
+    "max_hold_time": 300  # 초
 }

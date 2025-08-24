@@ -17,3 +17,12 @@ deploymentTarget = "cloudrun"
 
 [workflows]
 runButton = "Run Trading System"
+
+[[workflows.workflow]]
+name = "Run Trading System"
+author = 36496812
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python test_trading_system.py"
