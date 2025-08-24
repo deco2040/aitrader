@@ -16,8 +16,21 @@ from datetime import datetime, timedelta
 # Add current directory to path for imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from futures.futures_main import FuturesTrader
-from futures.claude_enhanced_trader import ClaudeEnhancedTrader
+# Import with error handling
+try:
+    from futures.futures_main import FuturesTrader
+except ImportError:
+    FuturesTrader = None
+
+try:
+    from futures.claude_enhanced_trader import ClaudeEnhancedTrader
+except ImportError:
+    ClaudeEnhancedTrader = None
+
+try:
+    from futures.futures_backtester import FuturesBacktester
+except ImportError:
+    FuturesBacktester = None
 from futures.futures_backtester import FuturesBacktester
 from futures.claude_enhanced_trader import ClaudeEnhancedTrader
 

@@ -15,6 +15,12 @@ import traceback
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+# Missing imports 추가
+try:
+    from futures.claude_enhanced_trader import ClaudeEnhancedTrader
+except ImportError:
+    ClaudeEnhancedTrader = None
+
 class ComprehensiveValidator:
     def __init__(self):
         self.validation_results = {}

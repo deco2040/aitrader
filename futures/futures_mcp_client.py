@@ -70,3 +70,51 @@ class FuturesMCPClient:
             "total_margin": random.uniform(1000, 5000),
             "unrealized_pnl": random.uniform(-1000, 2000)
         }
+import random
+from datetime import datetime
+
+class FuturesMCPClient:
+    """Futures MCP 클라이언트"""
+    
+    def __init__(self, api_key: str = "test", api_secret: str = "test"):
+        self.api_key = api_key
+        self.api_secret = api_secret
+    
+    def get_market_data(self, symbol: str) -> dict:
+        """시장 데이터 조회 (더미 구현)"""
+        base_price = 45000 if "BTC" in symbol else 3000
+        return {
+            "symbol": symbol,
+            "price": base_price + random.randint(-1000, 1000),
+            "volume": random.randint(1000, 10000),
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    def get_position(self, symbol: str) -> dict:
+        """포지션 조회"""
+        return {
+            "symbol": symbol,
+            "size": 0.0,
+            "side": "none",
+            "entry_price": 0.0,
+            "unrealized_pnl": 0.0
+        }
+    
+    def get_account_balance(self) -> dict:
+        """계좌 잔액 조회"""
+        return {
+            "total_balance": 10000.0,
+            "available_balance": 10000.0,
+            "margin_used": 0.0
+        }
+    
+    def place_order(self, symbol: str, side: str, size: float, price: float = None) -> dict:
+        """주문 실행 (더미 구현)"""
+        return {
+            "order_id": f"order_{random.randint(1000, 9999)}",
+            "status": "filled",
+            "symbol": symbol,
+            "side": side,
+            "size": size,
+            "price": price or self.get_market_data(symbol)["price"]
+        }

@@ -120,3 +120,26 @@ if __name__ == "__main__":
     # 시장 감정 분석 테스트
     sentiment = client.get_market_sentiment("BTC/USDT")
     print(f"Market sentiment: {sentiment}")
+class FuturesClaudeClient:
+    """Futures Claude API 클라이언트"""
+    
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+    
+    def generate_trading_signal(self, symbol: str, timeframe: int) -> dict:
+        """거래 신호 생성 (더미 구현)"""
+        return {
+            "action": "hold",
+            "confidence": 75,
+            "reasoning": "Market conditions are neutral",
+            "price_target": None,
+            "stop_loss": None
+        }
+    
+    def analyze_market_sentiment(self, symbol: str) -> dict:
+        """시장 감정 분석"""
+        return {
+            "sentiment": "neutral",
+            "score": 0.5,
+            "factors": ["trading_volume", "price_momentum", "market_news"]
+        }

@@ -1,20 +1,29 @@
-
 import random
 import time
-from typing import Dict, Any
-import json
+from typing import Dict, Any, Optional, List
+from datetime import datetime
+
+try:
+    from .futures_claude_client import FuturesClaudeClient
+except ImportError:
+    # Fallback for testing environment
+    class FuturesClaudeClient:
+        def __init__(self, api_key):
+            self.api_key = api_key
+        def generate_trading_signal(self, symbol, timeframe):
+            return {"action": "hold", "confidence": 50}
 
 class ClaudeEnhancedTrader:
     """
     Claude AI를 활용한 고급 선물 거래 시스템
     실제 Claude API 연결이 필요하지만 여기서는 시뮬레이션으로 구현
     """
-    
+
     def __init__(self, claude_api_key: str, mcp_client):
         self.claude_api_key = claude_api_key
         self.mcp_client = mcp_client
         print(f"ClaudeEnhancedTrader initialized with API key: {claude_api_key[:10]}...")
-    
+
     def get_intelligent_trading_signal(self, symbol: str) -> Dict[str, Any]:
         """Claude를 활용한 지능형 거래 신호 생성"""
         try:
@@ -22,12 +31,12 @@ class ClaudeEnhancedTrader:
             market_data = self.mcp_client.get_market_data(symbol)
             position = self.mcp_client.get_position(symbol)
             balance = self.mcp_client.get_account_balance()
-            
+
             # Claude 분석 시뮬레이션
             actions = ["BUY", "SELL", "HOLD"]
             action = random.choice(actions)
             confidence = random.randint(60, 95)
-            
+
             # 더 정교한 분석 결과
             analysis = {
                 "action": action,
@@ -41,9 +50,9 @@ class ClaudeEnhancedTrader:
                 "volatility_assessment": random.choice(["HIGH", "MEDIUM", "LOW"]),
                 "news_impact": random.choice(["POSITIVE", "NEGATIVE", "NEUTRAL"])
             }
-            
+
             return analysis
-            
+
         except Exception as e:
             print(f"지능형 신호 생성 오류: {e}")
             return {
@@ -52,7 +61,7 @@ class ClaudeEnhancedTrader:
                 "reasoning": f"분석 오류: {str(e)}",
                 "risk_level": "HIGH"
             }
-    
+
     def get_market_narrative(self, symbol: str) -> str:
         """Claude를 활용한 시장 해석 스토리"""
         try:
@@ -60,7 +69,7 @@ class ClaudeEnhancedTrader:
             price = market_data["price"]
             volume = market_data["volume"]
             change = market_data.get("change_24h", 0)
-            
+
             # 시장 상황에 따른 내러티브 생성
             if change > 0.03:
                 sentiment = "강세"
@@ -110,25 +119,25 @@ class ClaudeEnhancedTrader:
 
 추천: 명확한 방향성 확인될 때까지 관망 권장
 """
-            
+
             return narrative.strip()
-            
+
         except Exception as e:
             return f"시장 해석 생성 오류: {str(e)}"
-    
+
     def execute_intelligent_trade(self, symbol: str) -> Dict[str, Any]:
         """지능형 거래 실행"""
         try:
             # 지능형 분석 수행
             claude_analysis = self.get_intelligent_trading_signal(symbol)
             market_narrative = self.get_market_narrative(symbol)
-            
+
             # 거래 실행 결정
             execution_result = {"executed": False, "reason": ""}
-            
+
             if claude_analysis["confidence"] > 75:
                 action = claude_analysis["action"]
-                
+
                 if action == "BUY":
                     amount = claude_analysis["position_size_recommendation"]
                     success = self.mcp_client.execute_buy_order(symbol, amount)
@@ -138,7 +147,7 @@ class ClaudeEnhancedTrader:
                         "amount": amount,
                         "reason": "High confidence buy signal"
                     }
-                    
+
                 elif action == "SELL":
                     position = self.mcp_client.get_position(symbol)
                     if position["size"] > 0:
@@ -146,7 +155,7 @@ class ClaudeEnhancedTrader:
                         success = self.mcp_client.execute_sell_order(symbol, amount)
                         execution_result = {
                             "executed": success,
-                            "action": "SELL", 
+                            "action": "SELL",
                             "amount": amount,
                             "reason": "High confidence sell signal"
                         }
@@ -155,7 +164,7 @@ class ClaudeEnhancedTrader:
                             "executed": False,
                             "reason": "No position to sell"
                         }
-                        
+
                 else:  # HOLD
                     execution_result = {
                         "executed": False,
@@ -167,20 +176,20 @@ class ClaudeEnhancedTrader:
                     "executed": False,
                     "reason": f"Confidence too low: {claude_analysis['confidence']}%"
                 }
-            
+
             return {
                 "claude_analysis": claude_analysis,
                 "market_narrative": market_narrative,
                 "execution_result": execution_result
             }
-            
+
         except Exception as e:
             return {
                 "claude_analysis": {"action": "HOLD", "confidence": 0, "reasoning": f"Error: {e}"},
                 "market_narrative": f"Analysis failed: {str(e)}",
                 "execution_result": {"executed": False, "reason": f"System error: {e}"}
             }
-    
+
     def _generate_reasoning(self, symbol: str, market_data: Dict, action: str) -> str:
         """거래 결정 근거 생성"""
         reasonings = {
@@ -203,73 +212,18 @@ class ClaudeEnhancedTrader:
                 f"리스크 대비 수익 비율 불충분"
             ]
         }
-        
+
         return random.choice(reasonings.get(action, ["일반적인 시장 분석 기준"]))
-    
+
     def _calculate_position_size(self, balance: Dict, confidence: int) -> float:
         """신뢰도 기반 포지션 크기 계산"""
         available = balance.get("available", 1000)
         base_size = available * 0.1  # 기본 10%
-        
+
         # 신뢰도에 따른 조정
         confidence_multiplier = confidence / 100
         position_size = base_size * confidence_multiplier
-        
+
         # 최대 30%로 제한
         max_size = available * 0.3
         return min(position_size, max_size)
-from typing import Dict, Any
-import random
-
-class ClaudeEnhancedTrader:
-    """Claude 강화 거래자 클래스"""
-    
-    def __init__(self, claude_api_key: str, mcp_client):
-        self.claude_api_key = claude_api_key
-        self.mcp_client = mcp_client
-        print(f"ClaudeEnhancedTrader initialized with API key: {claude_api_key[:10]}...")
-    
-    def get_intelligent_trading_signal(self, symbol: str) -> Dict[str, Any]:
-        """지능형 거래 신호 생성"""
-        actions = ["BUY", "SELL", "HOLD"]
-        action = random.choice(actions)
-        confidence = random.randint(60, 95)
-        
-        return {
-            "action": action,
-            "confidence": confidence,
-            "reasoning": f"AI 분석 결과 {symbol}에 대한 {action} 신호",
-            "risk_level": "medium"
-        }
-    
-    def get_market_narrative(self, symbol: str) -> str:
-        """시장 해석 생성"""
-        narratives = [
-            f"{symbol} 시장은 현재 강세 모멘텀을 보이고 있습니다.",
-            f"{symbol}의 기술적 지표들이 매수 신호를 나타내고 있습니다.",
-            f"{symbol} 시장에서 변동성이 증가하고 있어 주의가 필요합니다."
-        ]
-        return random.choice(narratives)
-    
-    def execute_intelligent_trade(self, symbol: str) -> Dict[str, Any]:
-        """지능형 거래 실행"""
-        try:
-            signal = self.get_intelligent_trading_signal(symbol)
-            narrative = self.get_market_narrative(symbol)
-            
-            # 실제 거래 실행 시뮬레이션
-            execution_result = {"status": "success", "message": f"{signal['action']} 주문이 실행되었습니다."}
-            
-            return {
-                "claude_analysis": signal,
-                "market_narrative": narrative,
-                "execution_result": execution_result
-            }
-            
-        except Exception as e:
-            return {
-                "error": str(e),
-                "claude_analysis": None,
-                "market_narrative": "분석 실패",
-                "execution_result": {"status": "failed"}
-            }

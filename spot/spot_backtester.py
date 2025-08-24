@@ -43,75 +43,104 @@ class SpotBacktester:
 
     def buy(self, asset_or_price, price_or_quantity, quantity=None):
         """매수 주문"""
-        if quantity is None:
-            # 간단한 매수 (asset, price, quantity)
-            asset, price, quantity = asset_or_price, price_or_quantity, quantity
-            cost = price * quantity * (1 + self.commission_rate)
-            if self.balance >= cost:
-                self.balance -= cost
-                self.holdings[asset] = self.holdings.get(asset, 0) + quantity
-                self.trades.append({
-                    'type': 'buy', 
-                    'asset': asset, 
-                    'price': price, 
-                    'quantity': quantity, 
-                    'cost': cost,
-                    'timestamp': datetime.now()
-                })
-                print(f"Bought {quantity} of {asset} at ${price}. Balance: ${self.balance:.2f}")
+        # 입력값 타입 검증
+        try:
+            if quantity is None:
+                # 3개 매개변수 모드: asset, price, quantity
+                asset = asset_or_price
+                price = float(price_or_quantity) if price_or_quantity is not None else 0.0
+                quantity = 0.0  # quantity가 None이면 0으로 처리
+                print(f"Warning: quantity is None for {asset}")
+                return False
             else:
-                print("Insufficient balance to buy.")
+                # 히스토리컬 백테스팅용: price, quantity
+                if isinstance(asset_or_price, str):
+                    # 3개 매개변수: asset, price, quantity
+                    asset = asset_or_price
+                    price = float(price_or_quantity) if price_or_quantity is not None else 0.0
+                    quantity = float(quantity) if quantity is not None else 0.0
+                else:
+                    # 히스토리컬 백테스팅: price, quantity
+                    asset = 'position'
+                    price = float(asset_or_price) if asset_or_price is not None else 0.0
+                    quantity = float(price_or_quantity) if price_or_quantity is not None else 0.0
+        except (ValueError, TypeError) as e:
+            print(f"Invalid input types in buy(): {e}")
+            return False
+
+        if price <= 0 or quantity <= 0:
+            print(f"Invalid price ({price}) or quantity ({quantity})")
+            return False
+
+        cost = price * quantity * (1 + self.commission_rate)
+        
+        if self.balance >= cost:
+            self.balance -= cost
+            self.holdings[asset] = self.holdings.get(asset, 0) + quantity
+            self.trades.append({
+                'type': 'buy', 
+                'asset': asset, 
+                'price': price, 
+                'quantity': quantity, 
+                'cost': cost,
+                'timestamp': datetime.now()
+            })
+            print(f"Bought {quantity} of {asset} at ${price}. Balance: ${self.balance:.2f}")
+            return True
         else:
-            # 히스토리컬 백테스팅용
-            price, quantity = asset_or_price, price_or_quantity
-            cost = price * quantity * (1 + self.commission_rate)
-            if self.balance >= cost:
-                self.balance -= cost
-                self.holdings['position'] = self.holdings.get('position', 0) + quantity
-                self.trades.append({
-                    'type': 'buy', 
-                    'price': price, 
-                    'quantity': quantity, 
-                    'cost': cost,
-                    'timestamp': datetime.now()
-                })
+            print(f"Insufficient balance. Required: ${cost:.2f}, Available: ${self.balance:.2f}")
+            return False
 
     def sell(self, asset_or_price, price_or_quantity, quantity=None):
         """매도 주문"""
-        if quantity is None:
-            # 간단한 매도
-            asset, price, quantity = asset_or_price, price_or_quantity, quantity
-            if asset in self.holdings and self.holdings[asset] >= quantity:
-                revenue = price * quantity * (1 - self.commission_rate)
-                self.balance += revenue
-                self.holdings[asset] -= quantity
-                if self.holdings[asset] == 0:
-                    del self.holdings[asset]
-                self.trades.append({
-                    'type': 'sell', 
-                    'asset': asset, 
-                    'price': price, 
-                    'quantity': quantity, 
-                    'revenue': revenue,
-                    'timestamp': datetime.now()
-                })
-                print(f"Sold {quantity} of {asset} at ${price}. Balance: ${self.balance:.2f}")
+        # 입력값 타입 검증
+        try:
+            if quantity is None:
+                # quantity가 None이면 오류
+                asset = asset_or_price
+                price = float(price_or_quantity) if price_or_quantity is not None else 0.0
+                quantity = 0.0
+                print(f"Warning: quantity is None for {asset}")
+                return False
             else:
-                print(f"Insufficient holdings of {asset} to sell.")
+                if isinstance(asset_or_price, str):
+                    # 3개 매개변수: asset, price, quantity
+                    asset = asset_or_price
+                    price = float(price_or_quantity) if price_or_quantity is not None else 0.0
+                    quantity = float(quantity) if quantity is not None else 0.0
+                else:
+                    # 히스토리컬 백테스팅: price, quantity
+                    asset = 'position'
+                    price = float(asset_or_price) if asset_or_price is not None else 0.0
+                    quantity = float(price_or_quantity) if price_or_quantity is not None else 0.0
+        except (ValueError, TypeError) as e:
+            print(f"Invalid input types in sell(): {e}")
+            return False
+
+        if price <= 0 or quantity <= 0:
+            print(f"Invalid price ({price}) or quantity ({quantity})")
+            return False
+
+        current_holdings = self.holdings.get(asset, 0)
+        if current_holdings >= quantity:
+            revenue = price * quantity * (1 - self.commission_rate)
+            self.balance += revenue
+            self.holdings[asset] -= quantity
+            if self.holdings[asset] == 0:
+                del self.holdings[asset]
+            self.trades.append({
+                'type': 'sell', 
+                'asset': asset, 
+                'price': price, 
+                'quantity': quantity, 
+                'revenue': revenue,
+                'timestamp': datetime.now()
+            })
+            print(f"Sold {quantity} of {asset} at ${price}. Balance: ${self.balance:.2f}")
+            return True
         else:
-            # 히스토리컬 백테스팅용
-            price, quantity = asset_or_price, price_or_quantity
-            if self.holdings.get('position', 0) >= quantity:
-                revenue = price * quantity * (1 - self.commission_rate)
-                self.balance += revenue
-                self.holdings['position'] -= quantity
-                self.trades.append({
-                    'type': 'sell', 
-                    'price': price, 
-                    'quantity': quantity, 
-                    'revenue': revenue,
-                    'timestamp': datetime.now()
-                })
+            print(f"Insufficient holdings of {asset}. Required: {quantity}, Available: {current_holdings}")
+            return False
 
     def backtest(self):
         """전체 백테스팅 실행"""
@@ -140,8 +169,10 @@ class SpotBacktester:
         signals['short_mavg'] = data['Close'].rolling(window=short_window, min_periods=1).mean()
         signals['long_mavg'] = data['Close'].rolling(window=long_window, min_periods=1).mean()
 
-        signals['signal'][short_window:] = np.where(
-            signals['short_mavg'][short_window:] > signals['long_mavg'][short_window:], 
+        # pandas 경고 해결: .loc 사용
+        mask = signals.index[short_window:]
+        signals.loc[mask, 'signal'] = np.where(
+            signals.loc[mask, 'short_mavg'] > signals.loc[mask, 'long_mavg'], 
             1.0, 0.0
         )
         signals['positions'] = signals['signal'].diff()
@@ -222,7 +253,7 @@ class SpotBacktester:
         else:
             # 실시간 거래 결과 - 타입 안전성 개선
             total_holdings_value = 0.0
-            default_prices = {"BTC": 45000.0, "ETH": 3000.0, "SOL": 150.0}
+            default_prices = {"BTC": 45000.0, "ETH": 3000.0, "SOL": 150.0, "position": 45000.0}
             
             for asset, quantity in self.holdings.items():
                 try:
