@@ -1,9 +1,14 @@
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
+
+#!/usr/bin/env python3
+"""
+Futures 백테스팅 시스템
+"""
+
+from datetime import datetime
+from typing import List, Dict, Any
 
 class FuturesBacktester:
-    def __init__(self, initial_capital, commission_rate):
+    def __init__(self, initial_capital: float, commission_rate: float):
         self.initial_capital = initial_capital
         self.commission_rate = commission_rate
         self.balance = initial_capital
@@ -13,7 +18,8 @@ class FuturesBacktester:
         self.max_drawdown = 0
         self.peak_balance = initial_capital
 
-    def buy(self, price, quantity):
+    def buy(self, price: float, quantity: float) -> bool:
+        """매수 실행"""
         # 입력 값 검증
         if price <= 0 or quantity <= 0:
             print(f"❌ 잘못된 입력값: price={price}, quantity={quantity}")
@@ -32,18 +38,19 @@ class FuturesBacktester:
                 'balance_after': self.balance
             })
             self._update_equity()
-            print(f"✅ Bought {quantity} at ${price}. Balance: ${self.balance:.2f}")
+            print(f"✅ Buy: {quantity} at ${price}")
             return True
         else:
-            print(f"❌ Insufficient balance to buy. Required: ${cost:.2f}, Available: ${self.balance:.2f}")
+            print(f"❌ 잔액 부족: 필요 ${cost:.2f}, 보유 ${self.balance:.2f}")
             return False
 
-    def sell(self, price, quantity):
+    def sell(self, price: float, quantity: float) -> bool:
+        """매도 실행"""
         # 입력 값 검증
         if price <= 0 or quantity <= 0:
             print(f"❌ 잘못된 입력값: price={price}, quantity={quantity}")
             return False
-            
+
         if self.position >= quantity:
             revenue = price * quantity * (1 - self.commission_rate)
             self.balance += revenue
@@ -57,10 +64,10 @@ class FuturesBacktester:
                 'balance_after': self.balance
             })
             self._update_equity()
-            print(f"✅ Sold {quantity} at ${price}. Balance: ${self.balance:.2f}")
+            print(f"✅ Sell: {quantity} at ${price}")
             return True
         else:
-            print(f"❌ Insufficient position to sell. Required: {quantity}, Available: {self.position}")
+            print(f"❌ 포지션 부족: 요청 {quantity}, 보유 {self.position}")
             return False
 
     def _update_equity(self):
@@ -81,14 +88,14 @@ class FuturesBacktester:
             if drawdown > self.max_drawdown:
                 self.max_drawdown = drawdown
 
-    def get_performance(self):
+    def get_performance(self) -> Dict[str, Any]:
         """성과 분석"""
         total_value = self.balance + (self.position * 45000)  # 현재가 가정
         profit_loss = total_value - self.initial_capital
         roi = (profit_loss / self.initial_capital) * 100
 
-        winning_trades = [t for t in self.trades if t['type'] == 'sell' and 'revenue' in t]
-        losing_trades = [t for t in self.trades if t['type'] == 'sell' and 'revenue' in t]
+        winning_trades = [t for t in self.trades if t['type'] == 'sell' and t.get('revenue', 0) > 0]
+        losing_trades = [t for t in self.trades if t['type'] == 'sell' and t.get('revenue', 0) < 0]
 
         return {
             'initial_capital': self.initial_capital,
@@ -99,27 +106,25 @@ class FuturesBacktester:
             'profit_loss': profit_loss,
             'roi_percent': roi,
             'max_drawdown_percent': self.max_drawdown * 100,
-            'winning_trades': len([t for t in winning_trades if t.get('revenue', 0) > t.get('cost', 0)]),
-            'total_commission_paid': sum(t.get('cost', 0) * self.commission_rate for t in self.trades)
+            'winning_trades': len(winning_trades),
+            'losing_trades': len(losing_trades),
+            'total_commission_paid': sum(t.get('cost', 0) * self.commission_rate for t in self.trades if t['type'] == 'buy')
         }
 
-    def generate_report(self):
+    def generate_report(self) -> str:
         """상세 보고서 생성"""
         performance = self.get_performance()
 
         report = f"""
 === 백테스팅 성과 보고서 ===
-초기 자본: ${performance['initial_capital']:,.2f}
-최종 잔액: ${performance['final_balance']:,.2f}
-포지션 가치: ${performance['position_value']:,.2f}
-총 자산 가치: ${performance['total_value']:,.2f}
-손익: ${performance['profit_loss']:,.2f}
+초기 자본: ${performance['initial_capital']:,}
+최종 잔액: ${performance['final_balance']:,}
+포지션 가치: ${performance['position_value']:,}
+총 자산: ${performance['total_value']:,}
+손익: ${performance['profit_loss']:,}
 수익률: {performance['roi_percent']:.2f}%
 최대 손실폭: {performance['max_drawdown_percent']:.2f}%
 총 거래 수: {performance['total_trades']}
-승률: {performance['winning_trades']}/{len([t for t in self.trades if t['type'] == 'sell'])}
-총 수수료: ${performance['total_commission_paid']:,.2f}
+승률: {performance['winning_trades']}/{performance['total_trades']}
 """
         return report
-
-# SpotBacktester는 spot/spot_backtester.py에서 정의됨

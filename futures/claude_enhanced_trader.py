@@ -1,6 +1,9 @@
-` tags.
 
-<replit_final_file>
+#!/usr/bin/env python3
+"""
+Claude AI 향상된 거래자
+"""
+
 import json
 from datetime import datetime
 from typing import Dict, Any, Optional
@@ -8,9 +11,9 @@ from typing import Dict, Any, Optional
 class ClaudeEnhancedTrader:
     """Claude AI 향상된 거래자"""
 
-    def __init__(self, claude_api_key: str, mcp_client):
+    def __init__(self, claude_api_key: str = "demo_key", mcp_client=None):
         self.claude_api_key = claude_api_key
-        self.mcp_client = mcp_client
+        self.mcp_client = mcp_client or MockMCPClient()
         self.analysis_history = []
 
     def get_intelligent_trading_signal(self, symbol: str) -> Dict[str, Any]:
@@ -65,16 +68,16 @@ class ClaudeEnhancedTrader:
             price = market_data.get('price', 50000)
 
             narrative = f"""
-            Market Analysis for {symbol}:
+Market Analysis for {symbol}:
 
-            Current Price: ${price:,.2f}
-            Market Sentiment: {'Bullish' if price > 45000 else 'Bearish'}
+Current Price: ${price:,.2f}
+Market Sentiment: {'Bullish' if price > 45000 else 'Bearish'}
 
-            Technical Analysis:
-            - The price is {'above' if price > 45000 else 'below'} key resistance levels
-            - Volume indicates {'strong' if price > 50000 else 'moderate'} market interest
+Technical Analysis:
+- The price is {'above' if price > 45000 else 'below'} key resistance levels
+- Volume indicates {'strong' if price > 50000 else 'moderate'} market interest
 
-            Recommendation: {'Consider buying on dips' if price > 45000 else 'Wait for better entry points'}
+Recommendation: {'Consider buying on dips' if price > 45000 else 'Wait for better entry points'}
             """
 
             return narrative.strip()
@@ -111,3 +114,26 @@ class ClaudeEnhancedTrader:
     def get_analysis_history(self) -> list:
         """분석 기록 반환"""
         return self.analysis_history
+
+
+class MockMCPClient:
+    """MCP 클라이언트 모킹"""
+    
+    def get_market_data(self, symbol: str) -> Dict[str, Any]:
+        """모의 시장 데이터"""
+        import random
+        return {
+            'symbol': symbol,
+            'price': random.uniform(40000, 60000),
+            'volume': random.uniform(500, 2000),
+            'timestamp': datetime.now().isoformat()
+        }
+    
+    def get_position(self, symbol: str) -> Dict[str, Any]:
+        """모의 포지션 데이터"""
+        return {
+            'symbol': symbol,
+            'size': 0,
+            'avg_price': 0,
+            'unrealized_pnl': 0
+        }

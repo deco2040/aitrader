@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -79,15 +78,15 @@ class SpotBacktester:
             return False
 
         cost = price * quantity * (1 + self.commission_rate)
-        
+
         if self.balance >= cost:
             self.balance -= cost
             self.holdings[asset] = self.holdings.get(asset, 0) + quantity
             self.trades.append({
-                'type': 'buy', 
-                'asset': asset, 
-                'price': price, 
-                'quantity': quantity, 
+                'type': 'buy',
+                'asset': asset,
+                'price': price,
+                'quantity': quantity,
                 'cost': cost,
                 'timestamp': datetime.now()
             })
@@ -133,10 +132,10 @@ class SpotBacktester:
             if self.holdings[asset] <= 0:
                 del self.holdings[asset]
             self.trades.append({
-                'type': 'sell', 
-                'asset': asset, 
-                'price': price, 
-                'quantity': quantity, 
+                'type': 'sell',
+                'asset': asset,
+                'price': price,
+                'quantity': quantity,
                 'revenue': revenue,
                 'timestamp': datetime.now()
             })
@@ -215,27 +214,32 @@ class SpotBacktester:
         try:
             if self.equity is None or index >= len(data):
                 return
-                
+
             current_price = data['Close'].iloc[index]
             date = data.index[index]
-            
-            cash_available = self.equity.iloc[index-1]['cash'] if index > 0 else self.initial_capital
 
-            if order_type == 'long' and cash_available > 0:
-                order_size = min(cash_available / current_price, 0.1)  # 최대 0.1 단위
-                cost = order_size * current_price * (1 + self.commission_rate)
-                
-                if cost <= cash_available:
-                    self.trades.append({
-                        'date': date, 
-                        'type': 'buy', 
-                        'price': current_price, 
-                        'size': order_size
-                    })
-                    
-                    self.equity.loc[date, 'holdings'] = order_size
-                    self.equity.loc[date, 'cash'] = cash_available - cost
+            # Ensure we have enough cash for the trade
+            cash_available = self.equity.loc[date, 'cash'] if date in self.equity.index else self.initial_capital
+            if cash_available <= 0:
+                return
 
+            # Calculate the amount to invest (e.g., 10% of current cash)
+            investment_amount = cash_available * 0.1
+            shares_to_buy = investment_amount / current_price
+
+            cost = shares_to_buy * current_price * (1 + self.commission_rate)
+
+            if cost <= cash_available:
+                self.equity.loc[date, 'holdings'] += shares_to_buy
+                self.equity.loc[date, 'cash'] -= cost
+
+                self.trades.append({
+                    'date': date,
+                    'type': 'buy',
+                    'price': current_price,
+                    'size': shares_to_buy
+                })
+                print(f"Entered {order_type} position: {shares_to_buy:.4f} shares at ${current_price:.2f}")
         except Exception as e:
             print(f"Enter trade failed: {e}")
 
@@ -244,27 +248,28 @@ class SpotBacktester:
         try:
             if self.equity is None or index >= len(data):
                 return
-                
+
             current_price = data['Close'].iloc[index]
             date = data.index[index]
-            
-            holdings_available = self.equity.iloc[index-1]['holdings'] if index > 0 else 0
 
-            if order_type == 'long' and holdings_available > 0:
-                order_size = holdings_available
-                revenue = order_size * current_price * (1 - self.commission_rate)
-                
-                self.trades.append({
-                    'date': date, 
-                    'type': 'sell', 
-                    'price': current_price, 
-                    'size': order_size
-                })
-                
-                cash_before = self.equity.iloc[index-1]['cash'] if index > 0 else 0
-                self.equity.loc[date, 'holdings'] = 0
-                self.equity.loc[date, 'cash'] = cash_before + revenue
+            # Ensure we have holdings to sell
+            holdings_to_sell = self.equity.loc[date, 'holdings'] if date in self.equity.index else 0
+            if holdings_to_sell <= 0:
+                return
 
+            # Calculate revenue from selling
+            revenue = holdings_to_sell * current_price * (1 - self.commission_rate)
+
+            self.equity.loc[date, 'holdings'] = 0  # Sell all holdings
+            self.equity.loc[date, 'cash'] += revenue
+
+            self.trades.append({
+                'date': date,
+                'type': 'sell',
+                'price': current_price,
+                'size': holdings_to_sell
+            })
+            print(f"Exited {order_type} position: {holdings_to_sell:.4f} shares at ${current_price:.2f}")
         except Exception as e:
             print(f"Exit trade failed: {e}")
 
@@ -273,26 +278,30 @@ class SpotBacktester:
         try:
             if self.equity is None:
                 return
-                
-            for i, date in enumerate(data.index):
+
+            # Initialize the first row if it doesn't exist or is empty
+            if self.equity.empty or self.equity.iloc[0].isnull().any():
+                self.equity.iloc[0]['holdings'] = 0.0
+                self.equity.iloc[0]['cash'] = float(self.initial_capital)
+                self.equity.iloc[0]['total'] = float(self.initial_capital)
+                self.equity.iloc[0]['returns'] = 0.0
+
+            for i in range(1, len(data.index)):
+                date = data.index[i]
+                prev_date = data.index[i-1]
+
+                # Carry forward previous values if not updated by trades
+                if date not in self.equity.index:
+                    self.equity.loc[date] = self.equity.loc[prev_date].copy()
+
                 current_price = data['Close'].iloc[i]
 
-                if i == 0:
-                    self.equity.loc[date, 'holdings'] = 0.0
-                    self.equity.loc[date, 'cash'] = float(self.initial_capital)
-                else:
-                    # 이전 값이 없으면 기본값 사용
-                    if pd.isna(self.equity.loc[date, 'holdings']):
-                        self.equity.loc[date, 'holdings'] = self.equity.iloc[i-1]['holdings']
-                    if pd.isna(self.equity.loc[date, 'cash']):
-                        self.equity.loc[date, 'cash'] = self.equity.iloc[i-1]['cash']
-
-                # 총 자산 계산
+                # Update holdings value based on current price if there are holdings
                 holdings_value = self.equity.loc[date, 'holdings'] * current_price
                 cash_value = self.equity.loc[date, 'cash']
                 self.equity.loc[date, 'total'] = holdings_value + cash_value
 
-            # 수익률 계산
+            # Calculate returns after all total values are computed
             self.equity['returns'] = self.equity['total'].pct_change().fillna(0)
 
         except Exception as e:
@@ -315,23 +324,23 @@ class SpotBacktester:
                 # 실시간 거래 결과
                 total_holdings_value = 0.0
                 default_prices = {"BTC": 45000.0, "ETH": 3000.0, "SOL": 150.0, "position": 45000.0}
-                
+
                 for asset, quantity in self.holdings.items():
                     try:
                         if quantity is None or quantity == 0:
                             continue
-                        
+
                         # 타입 검증 및 변환
                         if isinstance(quantity, (str, list, dict)):
                             print(f"Warning: Invalid quantity type for {asset}: {type(quantity)}")
                             continue
-                            
+
                         quantity_float = float(quantity)
-                        
+
                         if quantity_float > 0:
                             price = default_prices.get(asset, 100.0)
                             total_holdings_value += quantity_float * price
-                            
+
                     except (ValueError, TypeError) as e:
                         print(f"Warning: Invalid quantity for {asset}: {quantity}, error: {e}")
                         continue
@@ -341,7 +350,7 @@ class SpotBacktester:
                     balance_float = float(self.balance) if self.balance is not None else 0.0
                 except (ValueError, TypeError):
                     balance_float = 0.0
-                
+
                 return {
                     'initial_capital': float(self.initial_capital),
                     'final_balance': balance_float,
