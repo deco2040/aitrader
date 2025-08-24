@@ -1,7 +1,7 @@
-from futures_claude_client import FuturesClaudeClient
-from futures_mcp_client import FuturesMCPClient
-from futures_time_based_trader import TimeBasedTradingManager
-from claude_enhanced_trader import ClaudeEnhancedTrader
+from .futures_claude_client import FuturesClaudeClient
+from .futures_mcp_client import FuturesMCPClient
+from .futures_time_based_trader import TimeBasedTradingManager
+from .claude_enhanced_trader import ClaudeEnhancedTrader
 from futures_config import *
 import time
 

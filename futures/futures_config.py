@@ -84,3 +84,32 @@ POSITION_MANAGEMENT = {
     'dca_enabled': False,  # 물타기 비활성화 (선물 위험)
     'hedging_enabled': False  # 헤징 비활성화
 }
+# Futures Trading Configuration
+
+# Position sizing
+DEFAULT_POSITION_SIZE = 1000.0
+MAX_POSITION_SIZE = 10000.0
+POSITION_SIZE = DEFAULT_POSITION_SIZE
+
+# Risk management
+MAX_LEVERAGE = 20
+DEFAULT_LEVERAGE = 10
+STOP_LOSS_PERCENTAGE = 0.02  # 2%
+TAKE_PROFIT_PERCENTAGE = 0.03  # 3%
+
+# Trading timeframes
+SCALP_TIMEFRAME = "5m"
+SWING_TIMEFRAME = "1h"
+POSITION_TIMEFRAME = "4h"
+
+# API Configuration
+CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
+MCP_API_URL = "https://api.exchange.com/v1"
+
+# Trading pairs
+DEFAULT_SYMBOL = "BTC/USDT"
+SUPPORTED_SYMBOLS = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
+
+# Session settings
+FUNDING_HOURS = [0, 8, 16]  # UTC hours
+HIGH_VOLUME_HOURS = [13, 14, 15, 16, 17]  # UTC hours

@@ -436,3 +436,104 @@ class MarketDataCollector:
             }
         ]
         return mock_events
+import json
+import time
+from datetime import datetime
+from typing import Dict, List, Any
+
+class MarketDataCollector:
+    """시장 데이터 수집기"""
+    
+    def collect_news_data(self, symbol: str) -> List[Dict]:
+        """뉴스 데이터 수집 (더미 데이터)"""
+        return [
+            {
+                "title": f"{symbol} breaks key resistance level",
+                "sentiment": "positive",
+                "timestamp": datetime.now().isoformat(),
+                "source": "crypto_news"
+            },
+            {
+                "title": "Market volatility increases amid uncertainty",
+                "sentiment": "negative", 
+                "timestamp": datetime.now().isoformat(),
+                "source": "financial_times"
+            }
+        ]
+    
+    def collect_social_data(self, symbol: str) -> Dict:
+        """소셜 미디어 데이터 수집 (더미 데이터)"""
+        return {
+            "twitter_sentiment": 0.65,
+            "reddit_mentions": 1250,
+            "fear_greed_index": 75,
+            "social_volume": "high"
+        }
+    
+    def collect_economic_calendar(self) -> List[Dict]:
+        """경제 캘린더 데이터 수집"""
+        return [
+            {
+                "event": "Fed Interest Rate Decision",
+                "date": "2024-01-31",
+                "impact": "high",
+                "currency": "USD"
+            }
+        ]
+
+class ClaudeMarketIntelligence:
+    """Claude 기반 시장 지능 분석"""
+    
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+        self.model = "claude-3-sonnet-20240229"
+        # 실제 구현에서는 Anthropic Claude 클라이언트 초기화
+        self.client = None  # DummyClaudeClient()
+    
+    def analyze_market_context(self, symbol: str, price_data: Dict, news_data: List) -> Dict:
+        """시장 맥락 분석"""
+        # 더미 분석 결과
+        return {
+            "market_sentiment": "bullish",
+            "trend_strength": 0.75,
+            "support_levels": [42000, 40000],
+            "resistance_levels": [47000, 50000],
+            "key_drivers": ["institutional_adoption", "regulatory_clarity"],
+            "confidence": 78
+        }
+    
+    def analyze_social_sentiment(self, social_data: Dict) -> Dict:
+        """소셜 감정 분석"""
+        return {
+            "overall_sentiment": "positive",
+            "sentiment_score": social_data.get("twitter_sentiment", 0.5),
+            "volume_trend": "increasing",
+            "key_topics": ["bullish_breakout", "institutional_buying"],
+            "confidence": 72
+        }
+    
+    def predict_volatility_events(self, historical_data: List, events: List) -> Dict:
+        """변동성 예측"""
+        return {
+            "volatility_forecast": "moderate_increase",
+            "risk_events": ["fed_meeting", "options_expiry"],
+            "time_horizon": "24h",
+            "confidence": 65
+        }
+    
+    def generate_narrative_analysis(self, market_data: Dict) -> str:
+        """시장 해석 스토리 생성"""
+        return f"""
+🧠 Claude 시장 분석 스토리:
+
+현재 {market_data.get('symbol', 'BTC/USDT')}는 강력한 상승 모멘텀을 보이고 있습니다. 
+주요 지지선 {market_data.get('price', {}).get('current_price', 45000)}$ 근처에서 
+강한 매수세가 확인되고 있으며, 기관 투자자들의 지속적인 유입이 
+가격 상승을 뒷받침하고 있습니다.
+
+소셜 미디어 감정 지수는 {market_data.get('social', {}).get('twitter_sentiment', 0.65)*100:.0f}%로 
+긍정적이며, 특히 기술적 돌파에 대한 기대감이 높아지고 있습니다.
+
+다음 24시간 동안 변동성 증가가 예상되므로, 
+적절한 리스크 관리와 함께 상승 추세 참여를 고려해볼 수 있습니다.
+        """

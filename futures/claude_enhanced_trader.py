@@ -1,8 +1,8 @@
 
-from claude_market_intelligence import ClaudeMarketIntelligence, MarketDataCollector
-from futures_claude_client import FuturesClaudeClient
-from futures_mcp_client import FuturesMCPClient
-from futures_config import *
+from .claude_market_intelligence import ClaudeMarketIntelligence, MarketDataCollector
+from .futures_claude_client import FuturesClaudeClient
+from .futures_mcp_client import FuturesMCPClient
+from .futures_config import *
 import json
 import time
 from datetime import datetime

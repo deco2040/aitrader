@@ -418,3 +418,53 @@ if __name__ == "__main__":
     print(f"Spot position: {spot_position}")
 
     spot_strategy.execute_rsi_strategy(eth_spot_symbol, window=14, overbought=70, oversold=30)
+
+class FuturesMCPClient:
+    """Futures MCP Client for order execution and data retrieval"""
+    
+    def __init__(self, api_key: str = None, api_secret: str = None):
+        self.api_key = api_key
+        self.api_secret = api_secret
+        self.positions = {}
+        self.balance = {"available": 10000.0, "total": 10000.0}
+    
+    def execute_buy_order(self, symbol: str, amount: float) -> bool:
+        """Execute buy order"""
+        print(f"🟢 Executing BUY order: {symbol}, Amount: {amount}")
+        current_size = self.positions.get(symbol, 0)
+        self.positions[symbol] = current_size + amount
+        self.balance["available"] -= amount * 0.1  # Assuming margin requirement
+        return True
+    
+    def execute_sell_order(self, symbol: str, amount: float) -> bool:
+        """Execute sell order"""
+        print(f"🔴 Executing SELL order: {symbol}, Amount: {amount}")
+        current_size = self.positions.get(symbol, 0)
+        self.positions[symbol] = current_size - amount
+        self.balance["available"] += amount * 0.1  # Return margin
+        return True
+    
+    def get_position(self, symbol: str) -> dict:
+        """Get current position for symbol"""
+        size = self.positions.get(symbol, 0)
+        return {
+            "symbol": symbol,
+            "size": size,
+            "avg_entry_price": 45000.0,
+            "unrealized_pnl": size * 50  # Dummy PnL
+        }
+    
+    def get_market_data(self, symbol: str) -> dict:
+        """Get market data for symbol"""
+        return {
+            "symbol": symbol,
+            "price": 45000.0,
+            "volume": 1500000000,
+            "24h_change": 2.5,
+            "bid": 44995.0,
+            "ask": 45005.0
+        }
+    
+    def get_account_balance(self) -> dict:
+        """Get account balance"""
+        return self.balance

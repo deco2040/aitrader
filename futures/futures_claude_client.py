@@ -24,6 +24,30 @@ class FuturesClaudeClient:
         """
         print(f"Fetching futures position for {symbol} using API key {self.api_key}")
         return {"symbol": symbol, "position": 50, "entry_price": 100.0}
+    
+    def generate_trading_signal(self, symbol: str, amount: float) -> str:
+        """
+        Generate trading signal for given symbol and amount.
+        """
+        print(f"Generating trading signal for {symbol} with amount {amount}")
+        # Simple logic: buy if amount > 1000, sell if < 500, hold otherwise
+        if amount > 1000:
+            return "BUY"
+        elif amount < 500:
+            return "SELL"
+        else:
+            return "HOLD"
+    
+    def analyze_market_data(self, market_data: dict) -> dict:
+        """
+        Analyze market data and return insights.
+        """
+        print(f"Analyzing market data: {market_data}")
+        return {
+            "sentiment": "bullish" if market_data.get("price", 0) > 40000 else "bearish",
+            "recommendation": "BUY" if market_data.get("volume", 0) > 500000 else "HOLD",
+            "confidence": 75
+        }
 
 # Example usage (for demonstration):
 # if __name__ == "__main__":

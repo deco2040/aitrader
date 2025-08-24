@@ -12,6 +12,7 @@
 
 import os
 import time
+import sys
 from futures.futures_main import FuturesTrader
 from futures.claude_enhanced_trader import ClaudeEnhancedTrader
 
@@ -109,6 +110,17 @@ def main():
     print("8. ⚠️ 숨겨진 리스크 요인 발견")
     
     print("\n🎉 Claude 차별화 시스템 데모 완료!")
+    
+    # 6. 종합 테스트 실행
+    print("\n🧪 종합 시스템 테스트 실행:")
+    print("=" * 50)
+    try:
+        from test_trading_system import TradingSystemTester
+        tester = TradingSystemTester()
+        tester.run_comprehensive_test()
+    except Exception as e:
+        print(f"테스트 실행 오류: {e}")
+        print("수동으로 'python test_trading_system.py' 실행하세요.")
 
 if __name__ == "__main__":
     main()
