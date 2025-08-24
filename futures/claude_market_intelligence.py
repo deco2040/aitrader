@@ -23,40 +23,51 @@ class ClaudeMarketIntelligence:
         Claude를 활용한 종합적 시장 맥락 분석
         """
         prompt = f"""
-        당신은 세계 최고의 암호화폐 트레이더이자 시장 분석가입니다.
+        You are an elite cryptocurrency futures trader and market analyst operating a 24-hour automated trading system.
         
-        현재 {symbol} 시장 상황을 분석해주세요:
+        TARGET: 0.5% daily profit through strategic position splitting and calculated risk-taking.
+        RISK TOLERANCE: Maximum 20% drawdown allowed - aggressive but controlled.
+        PHILOSOPHY: Embrace calculated risks, don't fear liquidation, but manage it intelligently.
         
-        가격 데이터:
+        Analyze the current {symbol} market situation:
+        
+        Price Data:
         {json.dumps(price_data, indent=2)}
         
-        최근 뉴스:
+        Recent News:
         {json.dumps(news_data, indent=2)}
         
-        다음 관점에서 분석해주세요:
+        Provide analysis considering:
         
-        1. 거시경제적 맥락 (금리, 인플레이션, 지정학적 리스크)
-        2. 시장 심리 및 투자자 감정
-        3. 기술적 패턴의 근본적 원인
-        4. 향후 24-72시간 시나리오 분석
-        5. 숨겨진 리스크 요인
-        6. 기관투자자 vs 개미투자자 동향
+        1. IMMEDIATE PROFIT OPPORTUNITIES (next 1-4 hours for 0.1-0.3% gains)
+        2. POSITION SPLITTING STRATEGY (multiple entries vs single large position)
+        3. LIQUIDATION DISTANCE CALCULATION (current margin vs liquidation price)
+        4. 24-HOUR MARKET CYCLES (Asia/Europe/US sessions and funding times)
+        5. VOLATILITY EXPLOITATION (how to profit from price swings)
+        6. RISK-REWARD OPTIMIZATION (targeting 0.5% daily with <20% max loss)
         
-        JSON 형태로 응답해주세요:
+        Respond in JSON format:
         {{
-            "market_sentiment": "bullish/bearish/neutral",
+            "market_sentiment": "aggressive_bullish/moderate_bullish/neutral/moderate_bearish/aggressive_bearish",
             "confidence": 0-100,
-            "key_factors": ["factor1", "factor2"],
-            "risk_level": "low/medium/high",
-            "time_horizon": "short/medium/long",
-            "action_recommendation": "buy/sell/hold/wait",
-            "reasoning": "상세한 분석 근거",
-            "key_price_levels": {{
-                "support": [price1, price2],
-                "resistance": [price1, price2]
+            "profit_probability_4h": 0-100,
+            "expected_move_4h": "percentage expected price movement in next 4 hours",
+            "position_sizing_strategy": "single_large/split_3_entries/split_5_entries/dca_approach",
+            "liquidation_risk": "low/medium/high/extreme",
+            "margin_utilization": 0-100,
+            "action_recommendation": "aggressive_long/moderate_long/scalp_long/hold/scalp_short/moderate_short/aggressive_short",
+            "reasoning": "detailed analysis focusing on profit opportunity and risk management",
+            "entry_levels": {{
+                "primary": price,
+                "secondary": price,
+                "tertiary": price
             }},
-            "catalyst_events": ["event1", "event2"],
-            "market_regime": "trending/ranging/volatile"
+            "stop_loss": price,
+            "take_profit_targets": [price1, price2, price3],
+            "session_timing": "optimal/suboptimal/avoid",
+            "funding_impact": "positive/neutral/negative",
+            "volatility_score": 0-100,
+            "market_regime": "trending_up/trending_down/ranging/volatile_up/volatile_down"
         }}
         """
         
@@ -118,27 +129,47 @@ class ClaudeMarketIntelligence:
         Claude의 패턴 인식을 활용한 변동성 예측
         """
         prompt = f"""
-        과거 데이터와 예정된 이벤트를 바탕으로 변동성을 예측해주세요:
+        VOLATILITY PREDICTION for 24-hour futures trading system targeting 0.5% daily profit.
         
-        과거 데이터:
+        Historical Data:
         {json.dumps(historical_data[-100:], indent=2)}
         
-        예정된 이벤트:
+        Upcoming Events:
         {json.dumps(upcoming_events, indent=2)}
         
-        다음을 예측해주세요:
-        1. 다음 24시간 내 급격한 변동성 확률
-        2. 예상 가격 변동 범위
-        3. 변동성 발생 시점
-        4. 주요 촉발 요인
+        Predict volatility with focus on PROFIT OPPORTUNITIES:
         
-        JSON 응답:
+        1. Next 1-4 hours: Quick scalp opportunities (0.1-0.3% moves)
+        2. Next 4-12 hours: Swing opportunities (0.3-0.8% moves) 
+        3. Next 12-24 hours: Position trading opportunities (0.5-1.5% moves)
+        4. FUNDING TIMES impact (00:00, 08:00, 16:00 UTC)
+        5. SESSION TRANSITIONS (Asia->Europe->US volatility patterns)
+        6. NEWS/EVENT driven volatility windows
+        
+        JSON Response:
         {{
-            "volatility_probability": 0-100,
-            "expected_range": {{"min": price, "max": price}},
-            "timing": "1h/4h/12h/24h",
+            "volatility_probability_1h": 0-100,
+            "volatility_probability_4h": 0-100,
+            "volatility_probability_12h": 0-100,
+            "expected_range_1h": {{"min": price, "max": price}},
+            "expected_range_4h": {{"min": price, "max": price}},
+            "expected_range_12h": {{"min": price, "max": price}},
+            "optimal_trading_windows": ["1h-3h UTC", "8h-10h UTC", "15h-17h UTC"],
+            "avoid_trading_windows": ["funding_times", "low_volume_periods"],
             "triggers": ["trigger1", "trigger2"],
-            "preparation_strategy": "hedge/reduce_position/increase_position"
+            "profit_strategy": {{
+                "scalp_opportunities": "1h windows with 0.1-0.3% moves",
+                "swing_opportunities": "4h windows with 0.3-0.8% moves",
+                "position_opportunities": "12h+ windows with 0.5%+ moves"
+            }},
+            "risk_events": ["high_impact_news", "funding_rate_changes"],
+            "session_volatility": {{
+                "asia": "low/medium/high",
+                "europe": "low/medium/high", 
+                "us": "low/medium/high"
+            }},
+            "funding_strategy": "increase_before/reduce_before/ignore",
+            "preparation_strategy": "aggressive_long/moderate_long/reduce_exposure/aggressive_short/moderate_short"
         }}
         """
         

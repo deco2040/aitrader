@@ -99,23 +99,49 @@ class ClaudeEnhancedTrader:
         """
         # Claude의 종합 판단을 위한 메타 분석
         synthesis_prompt = f"""
-        다음 분석 결과들을 종합하여 최종 트레이딩 결정을 내려주세요:
+        TRADING SYSTEM: 24-hour automated futures trading targeting 0.5% daily profit
+        RISK PARAMETERS: Maximum 20% drawdown tolerance, intelligent liquidation management
+        APPROACH: Aggressive but calculated, position splitting for risk control
         
-        시장 분석: {json.dumps(market_analysis, indent=2)}
-        소셜 감정: {json.dumps(social_analysis, indent=2)}
-        변동성 예측: {json.dumps(volatility_prediction, indent=2)}
+        Synthesize the following analysis for final trading decision:
         
-        최종 결정 JSON:
+        Market Analysis: {json.dumps(market_analysis, indent=2)}
+        Social Sentiment: {json.dumps(social_analysis, indent=2)}
+        Volatility Prediction: {json.dumps(volatility_prediction, indent=2)}
+        
+        Make the final trading decision considering:
+        - Can we achieve 0.1-0.3% profit in next 2-6 hours?
+        - Should we split positions (3-5 entries) or go with single large position?
+        - Current liquidation distance vs profit potential
+        - Optimal position size to stay within 20% risk while maximizing profit
+        
+        Final Decision JSON:
         {{
-            "action": "strong_buy/buy/hold/sell/strong_sell",
+            "action": "aggressive_long/moderate_long/scalp_long/wait_for_setup/scalp_short/moderate_short/aggressive_short",
             "confidence": 0-100,
-            "position_size": 0.1-1.0,
-            "stop_loss": "price",
-            "take_profit": "price",
-            "time_horizon": "minutes/hours/days",
-            "reasoning": "상세한 종합 판단 근거",
+            "total_position_allocation": 0.1-1.0,
+            "entry_strategy": {{
+                "type": "single/split_3/split_5/dca",
+                "first_entry": 0.3-0.6,
+                "second_entry": 0.2-0.4,
+                "third_entry": 0.1-0.3
+            }},
+            "stop_loss_tight": "price for quick scalps",
+            "stop_loss_wide": "price for swing positions", 
+            "take_profit_targets": {{
+                "tp1": "price (0.1-0.2% profit)",
+                "tp2": "price (0.3-0.5% profit)",
+                "tp3": "price (0.8-1.2% profit)"
+            }},
+            "max_hold_time": "15min/1h/4h/12h",
+            "leverage_usage": 5-20,
+            "liquidation_buffer": "percentage distance to liquidation",
+            "reasoning": "detailed justification focusing on profit probability and risk management",
+            "profit_expectation": "expected percentage gain in specified timeframe",
             "risk_factors": ["factor1", "factor2"],
-            "alternative_scenarios": ["scenario1", "scenario2"]
+            "exit_conditions": ["condition1", "condition2"],
+            "session_preference": "asia/europe/us/any",
+            "funding_strategy": "hold_through/exit_before"
         }}
         """
         
@@ -139,20 +165,54 @@ class ClaudeEnhancedTrader:
     
     def _apply_safety_checks(self, decision: dict) -> dict:
         """
-        AI 결정에 대한 안전 검증
+        Safety validation for aggressive but controlled trading
+        Target: 0.5% daily profit, Max risk: 20% drawdown
         """
-        # 1. 신뢰도가 낮으면 거래 중단
-        if decision.get('confidence', 0) < 60:
-            decision['action'] = 'hold'
-            decision['reasoning'] += " (신뢰도 부족으로 거래 중단)"
+        # 1. Confidence threshold for aggressive system (lower threshold for more trades)
+        if decision.get('confidence', 0) < 45:
+            decision['action'] = 'wait_for_setup'
+            decision['reasoning'] += " (Low confidence - waiting for better setup)"
         
-        # 2. 포지션 크기 제한
-        max_position = FUTURES_RULES.get('max_leverage_usage', 0.8)
-        decision['position_size'] = min(decision.get('position_size', 0.1), max_position)
+        # 2. Position allocation limits (allow up to 100% for calculated risks)
+        max_allocation = min(decision.get('total_position_allocation', 0.3), 1.0)
+        decision['total_position_allocation'] = max_allocation
         
-        # 3. 스톱로스 강제 적용
-        if 'stop_loss' not in decision:
-            decision['stop_loss'] = "강제 스톱로스 적용 필요"
+        # 3. Leverage safety (max 20x, optimal 10-15x for daily 0.5% target)
+        max_leverage = min(decision.get('leverage_usage', 10), 20)
+        decision['leverage_usage'] = max_leverage
+        
+        # 4. Liquidation buffer enforcement (minimum 25% buffer from liquidation)
+        min_liquidation_buffer = 25.0
+        current_buffer = decision.get('liquidation_buffer', '30%')
+        if isinstance(current_buffer, str):
+            buffer_value = float(current_buffer.replace('%', ''))
+            if buffer_value < min_liquidation_buffer:
+                decision['total_position_allocation'] *= 0.7  # Reduce position size
+                decision['reasoning'] += f" (Position reduced - liquidation too close: {buffer_value}%)"
+        
+        # 5. Maximum risk per trade (ensure single trade can't cause >20% loss)
+        max_single_trade_risk = 5.0  # 5% per trade max
+        leverage = decision.get('leverage_usage', 10)
+        position_size = decision.get('total_position_allocation', 0.3)
+        potential_loss = leverage * position_size * 100  # Max % loss if position goes to 0
+        
+        if potential_loss > max_single_trade_risk:
+            reduction_factor = max_single_trade_risk / potential_loss
+            decision['total_position_allocation'] *= reduction_factor
+            decision['reasoning'] += f" (Position reduced for risk management: {potential_loss:.1f}% risk)"
+        
+        # 6. Mandatory stop loss (but allow wider stops for swing trades)
+        if 'stop_loss_tight' not in decision and 'stop_loss_wide' not in decision:
+            decision['stop_loss_tight'] = "MANDATORY - set based on current price"
+            decision['stop_loss_wide'] = "MANDATORY - set based on current price"
+        
+        # 7. Take profit enforcement (ensure we lock in profits)
+        if 'take_profit_targets' not in decision:
+            decision['take_profit_targets'] = {
+                "tp1": "0.1-0.2% profit - MANDATORY",
+                "tp2": "0.3-0.5% profit - MANDATORY", 
+                "tp3": "0.8-1.2% profit - OPTIONAL"
+            }
         
         return decision
     
