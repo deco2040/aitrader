@@ -33,7 +33,13 @@ class IntegrationTester:
         # 3. 에러 처리 테스트
         self.test_error_handling()
         
-        # 4. 결과 출력
+        # 4. 데이터 일관성 테스트
+        self.test_data_consistency()
+        
+        # 5. 메모리 안전성 테스트
+        self.test_memory_safety()
+        
+        # 6. 결과 출력
         self.print_results()
     
     def test_backtesting_stability(self):
@@ -93,10 +99,22 @@ class IntegrationTester:
             result1 = futures_bt.buy(-100, 0.1)  # 음수 가격
             result2 = futures_bt.buy(45000, -0.1)  # 음수 수량
             result3 = futures_bt.buy(50000, 10)  # 잔액 부족
+            result4 = futures_bt.sell(45000, -0.1)  # 음수 매도 수량
+            result5 = futures_bt.sell(-100, 0.1)  # 음수 매도 가격
             
             assert result1 == False
             assert result2 == False
             assert result3 == False
+            assert result4 == False
+            assert result5 == False
+            
+            # Spot 백테스터 에러 처리 테스트
+            spot_bt = SpotBacktester(initial_capital=1000)
+            
+            # None 값 처리 테스트
+            spot_bt.holdings['TEST'] = None
+            performance = spot_bt.get_performance()
+            assert isinstance(performance['total_value'], (int, float))
             
             self.results['error_handling'] = True
             print("✅ 에러 처리 테스트 통과")
@@ -105,6 +123,55 @@ class IntegrationTester:
             self.results['error_handling'] = False
             print(f"❌ 에러 처리 테스트 실패: {e}")
     
+    def test_data_consistency(self):
+        """데이터 일관성 테스트"""
+        try:
+            futures_bt = FuturesBacktester(10000, 0.001)
+            
+            # 연속 거래 테스트
+            futures_bt.buy(45000, 0.1)
+            futures_bt.buy(46000, 0.05)
+            futures_bt.sell(47000, 0.08)
+            
+            performance = futures_bt.get_performance()
+            
+            # 잔액 일관성 검증
+            expected_balance = performance['final_balance'] + performance['position_value']
+            assert abs(expected_balance - performance['total_value']) < 0.01
+            
+            self.results['data_consistency'] = True
+            print("✅ 데이터 일관성 테스트 통과")
+            
+        except Exception as e:
+            self.results['data_consistency'] = False
+            print(f"❌ 데이터 일관성 테스트 실패: {e}")
+    
+    def test_memory_safety(self):
+        """메모리 안전성 테스트"""
+        try:
+            # 대량 거래 시뮬레이션
+            futures_bt = FuturesBacktester(100000, 0.001)
+            
+            for i in range(100):
+                if i % 2 == 0:
+                    futures_bt.buy(45000 + i, 0.01)
+                else:
+                    if futures_bt.position > 0:
+                        futures_bt.sell(45000 + i, min(0.01, futures_bt.position))
+            
+            performance = futures_bt.get_performance()
+            
+            # 메모리 사용량 확인 (거래 기록이 너무 많지 않은지)
+            assert len(futures_bt.trades) <= 200
+            assert len(futures_bt.equity_curve) <= 200
+            
+            self.results['memory_safety'] = True
+            print("✅ 메모리 안전성 테스트 통과")
+            
+        except Exception as e:
+            self.results['memory_safety'] = False
+            print(f"❌ 메모리 안전성 테스트 실패: {e}")
+
     def print_results(self):
         """결과 출력"""
         print(f"\n📋 통합 테스트 결과")

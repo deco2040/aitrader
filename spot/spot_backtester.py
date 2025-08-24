@@ -221,21 +221,29 @@ class SpotBacktester:
             }
         else:
             # 실시간 거래 결과 - 타입 안전성 개선
-            total_holdings_value = 0
-            default_prices = {"BTC": 45000, "ETH": 3000, "SOL": 150}
+            total_holdings_value = 0.0
+            default_prices = {"BTC": 45000.0, "ETH": 3000.0, "SOL": 150.0}
             
             for asset, quantity in self.holdings.items():
-                if isinstance(quantity, (int, float)) and quantity > 0:
-                    price = default_prices.get(asset, 100)  # 기본값 100
-                    total_holdings_value += float(quantity) * float(price)
+                try:
+                    # 타입 변환 및 검증
+                    quantity_float = float(quantity) if quantity is not None else 0.0
+                    if quantity_float > 0:
+                        price = float(default_prices.get(asset, 100.0))
+                        total_holdings_value += quantity_float * price
+                except (ValueError, TypeError) as e:
+                    print(f"Warning: Invalid quantity for {asset}: {quantity}, error: {e}")
+                    continue
 
+            balance_float = float(self.balance) if self.balance is not None else 0.0
+            
             return {
                 'initial_capital': self.initial_capital,
-                'final_balance': self.balance,
+                'final_balance': balance_float,
                 'holdings_value': total_holdings_value,
-                'total_value': self.balance + total_holdings_value,
+                'total_value': balance_float + total_holdings_value,
                 'total_trades': len(self.trades),
-                'profit_loss': (self.balance + total_holdings_value) - self.initial_capital
+                'profit_loss': (balance_float + total_holdings_value) - self.initial_capital
             }
 
 # 하위 호환성을 위한 별칭

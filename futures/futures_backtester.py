@@ -39,6 +39,11 @@ class FuturesBacktester:
             return False
 
     def sell(self, price, quantity):
+        # 입력 값 검증
+        if price <= 0 or quantity <= 0:
+            print(f"❌ 잘못된 입력값: price={price}, quantity={quantity}")
+            return False
+            
         if self.position >= quantity:
             revenue = price * quantity * (1 - self.commission_rate)
             self.balance += revenue
@@ -52,9 +57,11 @@ class FuturesBacktester:
                 'balance_after': self.balance
             })
             self._update_equity()
-            print(f"Sold {quantity} at ${price}. Balance: ${self.balance:.2f}")
+            print(f"✅ Sold {quantity} at ${price}. Balance: ${self.balance:.2f}")
+            return True
         else:
-            print(f"Insufficient position to sell. Required: {quantity}, Available: {self.position}")
+            print(f"❌ Insufficient position to sell. Required: {quantity}, Available: {self.position}")
+            return False
 
     def _update_equity(self):
         """자산 곡선 업데이트"""
