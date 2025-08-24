@@ -113,3 +113,36 @@ SUPPORTED_SYMBOLS = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
 # Session settings
 FUNDING_HOURS = [0, 8, 16]  # UTC hours
 HIGH_VOLUME_HOURS = [13, 14, 15, 16, 17]  # UTC hours
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Time-based trading configuration
+TIME_BASED_LEVERAGE = {
+    'high_volume_hours': [8, 9, 13, 14, 15, 16, 21, 22],  # UTC hours
+    'low_volume_hours': [2, 3, 4, 5, 6, 7],
+    'funding_hours': [0, 8, 16],  # Every 8 hours
+    'max_leverage': 10,
+    'min_leverage': 1
+}
+
+# Trading fees
+FEES = {
+    'maker_fee': 0.0002,
+    'taker_fee': 0.0004,
+    'funding_fee': 0.0001
+}
+
+# Scalping mode configuration
+SCALPING_MODE = {
+    'enabled': True,
+    'min_profit_pct': 0.1,
+    'max_hold_time': 300,  # seconds
+    'stop_loss_pct': 0.05
+}
+
+# API Configuration
+CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY", "your_claude_api_key_here")
+MCP_API_KEY = os.getenv("MCP_API_KEY", "your_mcp_api_key_here")
+MCP_API_SECRET = os.getenv("MCP_API_SECRET", "your_mcp_api_secret_here")

@@ -85,3 +85,88 @@ class TimeBasedTradingManager:
             recommendation['reason'] = 'Normal trading hours'
 
         return recommendation
+import datetime
+import pytz
+from .futures_config import TIME_BASED_LEVERAGE, FEES, SCALPING_MODE
+
+class TimeBasedTradingManager:
+    """시간대 기반 거래 관리자"""
+    
+    def __init__(self):
+        self.config = TIME_BASED_LEVERAGE
+        self.fees = FEES
+        
+    def get_current_utc_hour(self) -> int:
+        """현재 UTC 시간 반환"""
+        return datetime.datetime.utcnow().hour
+    
+    def is_high_volume_time(self) -> bool:
+        """고거래량 시간대 여부"""
+        current_hour = self.get_current_utc_hour()
+        return current_hour in self.config['high_volume_hours']
+    
+    def is_low_volume_time(self) -> bool:
+        """저거래량 시간대 여부"""
+        current_hour = self.get_current_utc_hour()
+        return current_hour in self.config['low_volume_hours']
+    
+    def is_near_funding_time(self, tolerance_minutes=30) -> bool:
+        """펀딩 시간 근처 여부"""
+        now = datetime.datetime.utcnow()
+        current_hour = now.hour
+        current_minute = now.minute
+        
+        for funding_hour in self.config['funding_hours']:
+            # 펀딩 시간 전후 tolerance_minutes 내인지 확인
+            if abs((current_hour * 60 + current_minute) - (funding_hour * 60)) <= tolerance_minutes:
+                return True
+        return False
+    
+    def should_avoid_trading(self) -> bool:
+        """거래를 피해야 하는 시간인지"""
+        return self.is_near_funding_time() or self.is_low_volume_time()
+    
+    def get_leverage_multiplier(self) -> float:
+        """현재 시간대에 맞는 레버리지 배수"""
+        if self.is_high_volume_time():
+            return self.config['max_leverage'] * 0.8
+        elif self.is_low_volume_time():
+            return self.config['min_leverage']
+        else:
+            return self.config['max_leverage'] * 0.5
+    
+    def get_optimal_position_size(self, base_amount: float) -> float:
+        """최적 포지션 크기 계산"""
+        multiplier = self.get_leverage_multiplier()
+        
+        if self.should_avoid_trading():
+            return base_amount * 0.1  # 매우 작은 포지션
+        elif self.is_high_volume_time():
+            return base_amount * multiplier
+        else:
+            return base_amount * (multiplier * 0.7)
+    
+    def get_trading_recommendation(self) -> dict:
+        """거래 추천 정보"""
+        current_hour = self.get_current_utc_hour()
+        
+        return {
+            'should_trade': not self.should_avoid_trading(),
+            'current_hour_utc': current_hour,
+            'is_high_volume': self.is_high_volume_time(),
+            'is_low_volume': self.is_low_volume_time(),
+            'near_funding': self.is_near_funding_time(),
+            'leverage_multiplier': self.get_leverage_multiplier(),
+            'reason': self._get_recommendation_reason()
+        }
+    
+    def _get_recommendation_reason(self) -> str:
+        """추천 이유 설명"""
+        if self.is_near_funding_time():
+            return "펀딩 시간 근처로 거래 회피"
+        elif self.is_low_volume_time():
+            return "저거래량 시간대로 거래 회피"
+        elif self.is_high_volume_time():
+            return "고거래량 시간대로 적극적 거래 권장"
+        else:
+            return "일반 거래 시간대"
