@@ -1,6 +1,10 @@
 
-<old_str>from .futures_time_based_trader import TimeBasedTradingManager
-import datetime</old_str>
+<old_str>import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from futures_time_based_trader import TimeBasedTradingManager
+import datetime datetime</old_str>
 <new_str>from futures_time_based_trader import TimeBasedTradingManager
 import datetime
 

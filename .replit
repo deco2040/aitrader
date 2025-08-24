@@ -25,4 +25,4 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python test_trading_system.py"
+args = "python main.py"

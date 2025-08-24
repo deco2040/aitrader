@@ -85,3 +85,34 @@ SUPPORTED_SYMBOLS = [
     "SOL/USDT",
     "BNB/USDT"
 ]
+"""Futures 거래 설정"""
+
+# 시간대별 레버리지 설정
+TIME_BASED_LEVERAGE = {
+    "default": 5,
+    "high_volume": 10,
+    "low_volume": 3,
+    "funding_time": 2
+}
+
+# 수수료 설정
+FEES = {
+    "taker": 0.001,  # 0.1%
+    "maker": 0.0008,  # 0.08%
+    "funding": 0.01   # 1%
+}
+
+# 스캘핑 모드 설정
+SCALPING_MODE = {
+    "enabled": True,
+    "max_positions": 3,
+    "quick_exit_threshold": 0.005,  # 0.5%
+    "stop_loss": 0.02  # 2%
+}
+
+# 거래 시간 설정
+TRADING_HOURS = {
+    "active_start": 8,   # UTC
+    "active_end": 22,    # UTC
+    "funding_times": [0, 8, 16]  # UTC 시간
+}

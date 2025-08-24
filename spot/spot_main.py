@@ -1,7 +1,5 @@
 
-<old_str>from .spot_backtester import SpotBacktester
-from .spot_config impo</old_str>
-<new_str>import sys
+import sys
 import os
 from typing import Dict, Any, Optional
 
@@ -85,4 +83,4 @@ def main():
         print(f"메인 실행 오류: {e}")
 
 if __name__ == "__main__":
-    main()</old_str>
+    main()

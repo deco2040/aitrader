@@ -222,10 +222,12 @@ class SpotBacktester:
         else:
             # 실시간 거래 결과 - 타입 안전성 개선
             total_holdings_value = 0
+            default_prices = {"BTC": 45000, "ETH": 3000, "SOL": 150}
+            
             for asset, quantity in self.holdings.items():
-                # 기본 가격을 45000으로 가정 (타입 검증 추가)
                 if isinstance(quantity, (int, float)) and quantity > 0:
-                    total_holdings_value += float(quantity) * 45000
+                    price = default_prices.get(asset, 100)  # 기본값 100
+                    total_holdings_value += float(quantity) * price
 
             return {
                 'initial_capital': self.initial_capital,

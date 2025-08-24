@@ -113,3 +113,63 @@ class SpotClaudeClient:
             "score": random.randint(1, 100),
             "factors": ["뉴스 분석", "소셜 미디어", "거래량 분석"]
         }
+import random
+from typing import Dict, Any, Optional
+
+class SpotClaudeClient:
+    """Spot 거래용 Claude 클라이언트"""
+    
+    def __init__(self, api_key: str = "demo_api_key"):
+        self.api_key = api_key
+        self.balances = {"USD": 10000.0, "BTC": 0.0, "ETH": 0.0}
+        print(f"SpotClaudeClient initialized with API key: {api_key[:10]}...")
+    
+    def generate_trading_signal(self, symbol: str, amount: float) -> str:
+        """거래 신호 생성"""
+        signals = ["BUY", "SELL", "HOLD"]
+        signal = random.choice(signals)
+        print(f"Generated signal for {symbol}: {signal}")
+        return signal
+    
+    def get_balance(self, currency: str) -> float:
+        """잔액 조회"""
+        return self.balances.get(currency, 0.0)
+    
+    def place_order(self, symbol: str, quantity: float, price: float, side: str) -> Dict[str, Any]:
+        """주문 실행"""
+        currency = symbol.split('-')[0]  # BTC-USD -> BTC
+        
+        if side == "BUY":
+            cost = quantity * price
+            if self.balances["USD"] >= cost:
+                self.balances["USD"] -= cost
+                self.balances[currency] = self.balances.get(currency, 0) + quantity
+                return {"success": True, "order_id": f"order_{random.randint(1000, 9999)}"}
+            else:
+                return {"success": False, "error": "Insufficient balance"}
+        
+        elif side == "SELL":
+            if self.balances.get(currency, 0) >= quantity:
+                self.balances[currency] -= quantity
+                self.balances["USD"] += quantity * price
+                return {"success": True, "order_id": f"order_{random.randint(1000, 9999)}"}
+            else:
+                return {"success": False, "error": "Insufficient holdings"}
+        
+        return {"success": False, "error": "Invalid side"}
+    
+    def get_market_data(self, symbol: str) -> Dict[str, Any]:
+        """시장 데이터 조회"""
+        base_prices = {
+            "BTC-USD": 45000,
+            "ETH-USD": 3000,
+            "SOL-USD": 150
+        }
+        
+        price = base_prices.get(symbol, 100) * random.uniform(0.95, 1.05)
+        return {
+            "symbol": symbol,
+            "price": price,
+            "volume": random.randint(100000, 1000000),
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
