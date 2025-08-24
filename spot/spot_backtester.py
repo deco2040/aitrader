@@ -226,24 +226,37 @@ class SpotBacktester:
             
             for asset, quantity in self.holdings.items():
                 try:
-                    # 타입 변환 및 검증
-                    quantity_float = float(quantity) if quantity is not None else 0.0
+                    # None 체크 및 타입 변환
+                    if quantity is None:
+                        continue
+                    
+                    # 문자열인 경우 float로 변환
+                    if isinstance(quantity, str):
+                        quantity_float = float(quantity)
+                    else:
+                        quantity_float = float(quantity)
+                    
                     if quantity_float > 0:
-                        price = float(default_prices.get(asset, 100.0))
+                        price = default_prices.get(asset, 100.0)
                         total_holdings_value += quantity_float * price
+                        
                 except (ValueError, TypeError) as e:
                     print(f"Warning: Invalid quantity for {asset}: {quantity}, error: {e}")
                     continue
 
-            balance_float = float(self.balance) if self.balance is not None else 0.0
+            # balance 안전 변환
+            try:
+                balance_float = float(self.balance) if self.balance is not None else 0.0
+            except (ValueError, TypeError):
+                balance_float = 0.0
             
             return {
-                'initial_capital': self.initial_capital,
+                'initial_capital': float(self.initial_capital),
                 'final_balance': balance_float,
                 'holdings_value': total_holdings_value,
                 'total_value': balance_float + total_holdings_value,
                 'total_trades': len(self.trades),
-                'profit_loss': (balance_float + total_holdings_value) - self.initial_capital
+                'profit_loss': (balance_float + total_holdings_value) - float(self.initial_capital)
             }
 
 # 하위 호환성을 위한 별칭

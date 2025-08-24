@@ -1,6 +1,7 @@
 class SpotClaudeClient:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str = "demo_api_key"):
         self.api_key = api_key
+        print(f"SpotClaudeClient initialized with API key: {api_key[:10]}...")
 
     def get_balance(self, currency: str) -> float:
         """

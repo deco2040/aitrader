@@ -111,10 +111,19 @@ class IntegrationTester:
             # Spot 백테스터 에러 처리 테스트
             spot_bt = SpotBacktester(initial_capital=1000)
             
-            # None 값 처리 테스트
+            # 다양한 타입의 잘못된 값 처리 테스트
             spot_bt.holdings['TEST'] = None
+            spot_bt.holdings['TEST2'] = "invalid_string"
+            spot_bt.holdings['TEST3'] = []
+            
             performance = spot_bt.get_performance()
             assert isinstance(performance['total_value'], (int, float))
+            assert performance['total_value'] >= 0
+            
+            # 추가 타입 안전성 테스트
+            spot_bt.balance = None
+            performance2 = spot_bt.get_performance()
+            assert performance2['final_balance'] == 0.0
             
             self.results['error_handling'] = True
             print("✅ 에러 처리 테스트 통과")
