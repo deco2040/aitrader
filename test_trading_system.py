@@ -180,9 +180,9 @@ class TradingSystemTester:
             
             # Spot 시스템도 테스트
             try:
-                from spot.spot_ai_trader import SpotAITrader
-                spot_trader = SpotAITrader()
-                print("✅ Spot AI Trader 초기화 성공")
+                from spot.spot_claude_client import SpotClaudeClient
+                spot_claude = SpotClaudeClient()
+                print("✅ Spot Claude Client 초기화 성공")
                 
                 # Spot Backtester 테스트
                 from spot.spot_backtester import SpotBacktester

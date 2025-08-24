@@ -15,6 +15,11 @@ class FuturesBacktester:
         self.peak_balance = initial_capital
 
     def buy(self, price, quantity):
+        # 입력 값 검증
+        if price <= 0 or quantity <= 0:
+            print(f"❌ 잘못된 입력값: price={price}, quantity={quantity}")
+            return False
+            
         cost = price * quantity * (1 + self.commission_rate)
         if self.balance >= cost:
             self.balance -= cost
@@ -28,9 +33,11 @@ class FuturesBacktester:
                 'balance_after': self.balance
             })
             self._update_equity()
-            print(f"Bought {quantity} at ${price}. Balance: ${self.balance:.2f}")
+            print(f"✅ Bought {quantity} at ${price}. Balance: ${self.balance:.2f}")
+            return True
         else:
-            print(f"Insufficient balance to buy. Required: ${cost:.2f}, Available: ${self.balance:.2f}")
+            print(f"❌ Insufficient balance to buy. Required: ${cost:.2f}, Available: ${self.balance:.2f}")
+            return False
 
     def sell(self, price, quantity):
         if self.position >= quantity:
