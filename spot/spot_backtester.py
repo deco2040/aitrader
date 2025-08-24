@@ -1,2 +1,0 @@
-from spot_claude_client import AggressiveClaudeClient
-from spot_config import *
