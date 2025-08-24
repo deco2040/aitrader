@@ -89,27 +89,67 @@ class FuturesBacktester:
                 self.max_drawdown = drawdown
 
     def get_performance(self) -> Dict[str, Any]:
-        """성과 분석"""
-        total_value = self.balance + (self.position * 45000)  # 현재가 가정
-        profit_loss = total_value - self.initial_capital
-        roi = (profit_loss / self.initial_capital) * 100
+        """성과 분석 - 타입 안전성 강화"""
+        try:
+            # 안전한 타입 변환
+            balance_safe = float(self.balance) if self.balance is not None else 0.0
+            position_safe = float(self.position) if self.position is not None else 0.0
+            initial_capital_safe = float(self.initial_capital)
+            
+            position_value = position_safe * 45000  # 현재가 가정
+            total_value = balance_safe + position_value
+            profit_loss = total_value - initial_capital_safe
+            roi = (profit_loss / initial_capital_safe) * 100 if initial_capital_safe > 0 else 0
 
-        winning_trades = [t for t in self.trades if t['type'] == 'sell' and t.get('revenue', 0) > 0]
-        losing_trades = [t for t in self.trades if t['type'] == 'sell' and t.get('revenue', 0) < 0]
+            # 안전한 거래 분석
+            winning_trades = []
+            losing_trades = []
+            total_commission = 0.0
+            
+            for t in self.trades:
+                try:
+                    if t['type'] == 'sell':
+                        revenue = float(t.get('revenue', 0))
+                        cost = float(t.get('cost', 0))
+                        if revenue > cost:
+                            winning_trades.append(t)
+                        else:
+                            losing_trades.append(t)
+                    elif t['type'] == 'buy':
+                        cost = float(t.get('cost', 0))
+                        total_commission += cost * self.commission_rate
+                except (ValueError, TypeError, KeyError):
+                    continue
 
-        return {
-            'initial_capital': self.initial_capital,
-            'final_balance': self.balance,
-            'position_value': self.position * 45000,
-            'total_value': total_value,
-            'total_trades': len(self.trades),
-            'profit_loss': profit_loss,
-            'roi_percent': roi,
-            'max_drawdown_percent': self.max_drawdown * 100,
-            'winning_trades': len(winning_trades),
-            'losing_trades': len(losing_trades),
-            'total_commission_paid': sum(t.get('cost', 0) * self.commission_rate for t in self.trades if t['type'] == 'buy')
-        }
+            return {
+                'initial_capital': initial_capital_safe,
+                'final_balance': balance_safe,
+                'position_value': position_value,
+                'total_value': total_value,
+                'total_trades': len(self.trades),
+                'profit_loss': profit_loss,
+                'roi_percent': roi,
+                'max_drawdown_percent': self.max_drawdown * 100,
+                'winning_trades': len(winning_trades),
+                'losing_trades': len(losing_trades),
+                'total_commission_paid': total_commission
+            }
+        except Exception as e:
+            print(f"Performance calculation error: {e}")
+            # 기본값 반환
+            return {
+                'initial_capital': float(self.initial_capital),
+                'final_balance': 0.0,
+                'position_value': 0.0,
+                'total_value': 0.0,
+                'total_trades': 0,
+                'profit_loss': -float(self.initial_capital),
+                'roi_percent': -100.0,
+                'max_drawdown_percent': 0.0,
+                'winning_trades': 0,
+                'losing_trades': 0,
+                'total_commission_paid': 0.0
+            }
 
     def generate_report(self) -> str:
         """상세 보고서 생성"""

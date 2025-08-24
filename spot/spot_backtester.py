@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -146,7 +147,7 @@ class SpotBacktester:
             return False
 
     def backtest(self):
-        """전체 백테스팅 실행 - 오류 수정"""
+        """전체 백테스팅 실행 - 오류 완전 수정"""
         if not self.symbol:
             print("Symbol not set for historical backtesting")
             return None
@@ -159,8 +160,9 @@ class SpotBacktester:
 
             # 안전한 백테스팅 실행
             signals = self.generate_signals(data)
-            self.execute_trades_safe(data, signals)
-            self.calculate_equity_safe(data)
+            if signals is not None and not signals.empty:
+                self.execute_trades_safe(data, signals)
+                self.calculate_equity_safe(data)
             return self.equity
 
         except Exception as e:
@@ -168,70 +170,98 @@ class SpotBacktester:
             return None
 
     def generate_signals(self, data):
-        """거래 신호 생성 - 안정성 개선"""
+        """거래 신호 생성 - 완전 안정화"""
         try:
-            short_window = 5  # 짧은 윈도우로 변경
-            long_window = 10  # 짧은 윈도우로 변경
+            if data.empty or len(data) < 10:
+                print("Insufficient data for signal generation")
+                return None
+                
+            short_window = min(5, len(data) // 2)
+            long_window = min(10, len(data) - 1)
 
             signals = pd.DataFrame(index=data.index)
             signals['signal'] = 0.0
+            signals['positions'] = 0.0
 
-            # 이동평균 계산
+            # 이동평균 계산 - 안전한 방식
             signals['short_mavg'] = data['Close'].rolling(window=short_window, min_periods=1).mean()
             signals['long_mavg'] = data['Close'].rolling(window=long_window, min_periods=1).mean()
 
-            # 신호 생성 - 안전한 방식
-            for i in range(long_window, len(signals)):
-                if signals.iloc[i]['short_mavg'] > signals.iloc[i]['long_mavg']:
-                    signals.iloc[i, signals.columns.get_loc('signal')] = 1.0
-                else:
-                    signals.iloc[i, signals.columns.get_loc('signal')] = 0.0
-
+            # 신호 생성 - 벡터화된 방식으로 변경
+            signals.loc[signals['short_mavg'] > signals['long_mavg'], 'signal'] = 1.0
             signals['positions'] = signals['signal'].diff()
+            
             return signals
 
         except Exception as e:
             print(f"Signal generation failed: {e}")
-            # 기본 신호 반환
-            signals = pd.DataFrame(index=data.index)
-            signals['signal'] = 0.0
-            signals['positions'] = 0.0
-            return signals
+            return None
 
     def execute_trades_safe(self, data, signals):
-        """안전한 거래 실행"""
+        """안전한 거래 실행 - 오류 수정"""
         try:
+            if signals is None or signals.empty:
+                return
+                
             for i in range(1, len(signals)):
-                if signals['positions'].iloc[i] == 1:  # Buy signal
-                    self.enter_trade_safe(data, i, 'long')
-                elif signals['positions'].iloc[i] == -1:  # Sell signal
-                    self.exit_trade_safe(data, i, 'long')
+                try:
+                    position_change = signals['positions'].iloc[i]
+                    if pd.notna(position_change):
+                        if position_change == 1:  # Buy signal
+                            self.enter_trade_safe(data, i, 'long')
+                        elif position_change == -1:  # Sell signal
+                            self.exit_trade_safe(data, i, 'long')
+                except Exception as e:
+                    print(f"Trade execution error at index {i}: {e}")
+                    continue
+                    
         except Exception as e:
             print(f"Trade execution failed: {e}")
 
     def enter_trade_safe(self, data, index, order_type):
-        """안전한 포지션 진입"""
+        """안전한 포지션 진입 - 완전 수정"""
         try:
             if self.equity is None or index >= len(data):
                 return
 
-            current_price = data['Close'].iloc[index]
+            current_price = float(data['Close'].iloc[index])
             date = data.index[index]
 
-            # Ensure we have enough cash for the trade
-            cash_available = self.equity.loc[date, 'cash'] if date in self.equity.index else self.initial_capital
+            # 현재 현금 확인
+            if date in self.equity.index:
+                cash_available = float(self.equity.loc[date, 'cash'])
+            else:
+                # 이전 날짜의 현금 찾기
+                prev_dates = self.equity.index[self.equity.index < date]
+                if len(prev_dates) > 0:
+                    cash_available = float(self.equity.loc[prev_dates[-1], 'cash'])
+                else:
+                    cash_available = float(self.initial_capital)
+
             if cash_available <= 0:
                 return
 
-            # Calculate the amount to invest (e.g., 10% of current cash)
+            # 투자 금액 계산 (현금의 10%)
             investment_amount = cash_available * 0.1
             shares_to_buy = investment_amount / current_price
-
             cost = shares_to_buy * current_price * (1 + self.commission_rate)
 
             if cost <= cash_available:
-                self.equity.loc[date, 'holdings'] += shares_to_buy
-                self.equity.loc[date, 'cash'] -= cost
+                # equity DataFrame 업데이트
+                if date not in self.equity.index:
+                    # 새로운 날짜 추가
+                    new_row = pd.DataFrame(index=[date])
+                    new_row['holdings'] = 0.0
+                    new_row['cash'] = cash_available
+                    new_row['total'] = cash_available
+                    new_row['returns'] = 0.0
+                    self.equity = pd.concat([self.equity, new_row])
+                    self.equity.sort_index(inplace=True)
+
+                # 값 업데이트
+                current_holdings = float(self.equity.loc[date, 'holdings'])
+                self.equity.loc[date, 'holdings'] = current_holdings + shares_to_buy
+                self.equity.loc[date, 'cash'] = cash_available - cost
 
                 self.trades.append({
                     'date': date,
@@ -240,28 +270,56 @@ class SpotBacktester:
                     'size': shares_to_buy
                 })
                 print(f"Entered {order_type} position: {shares_to_buy:.4f} shares at ${current_price:.2f}")
+                
         except Exception as e:
             print(f"Enter trade failed: {e}")
 
     def exit_trade_safe(self, data, index, order_type):
-        """안전한 포지션 종료"""
+        """안전한 포지션 종료 - 완전 수정"""
         try:
             if self.equity is None or index >= len(data):
                 return
 
-            current_price = data['Close'].iloc[index]
+            current_price = float(data['Close'].iloc[index])
             date = data.index[index]
 
-            # Ensure we have holdings to sell
-            holdings_to_sell = self.equity.loc[date, 'holdings'] if date in self.equity.index else 0
+            # 현재 보유량 확인
+            if date in self.equity.index:
+                holdings_to_sell = float(self.equity.loc[date, 'holdings'])
+            else:
+                # 이전 날짜의 보유량 찾기
+                prev_dates = self.equity.index[self.equity.index < date]
+                if len(prev_dates) > 0:
+                    holdings_to_sell = float(self.equity.loc[prev_dates[-1], 'holdings'])
+                else:
+                    holdings_to_sell = 0.0
+
             if holdings_to_sell <= 0:
                 return
 
-            # Calculate revenue from selling
+            # 매도 수익 계산
             revenue = holdings_to_sell * current_price * (1 - self.commission_rate)
 
-            self.equity.loc[date, 'holdings'] = 0  # Sell all holdings
-            self.equity.loc[date, 'cash'] += revenue
+            # equity DataFrame 업데이트
+            if date not in self.equity.index:
+                prev_dates = self.equity.index[self.equity.index < date]
+                if len(prev_dates) > 0:
+                    prev_cash = float(self.equity.loc[prev_dates[-1], 'cash'])
+                else:
+                    prev_cash = float(self.initial_capital)
+                    
+                new_row = pd.DataFrame(index=[date])
+                new_row['holdings'] = holdings_to_sell
+                new_row['cash'] = prev_cash
+                new_row['total'] = prev_cash + (holdings_to_sell * current_price)
+                new_row['returns'] = 0.0
+                self.equity = pd.concat([self.equity, new_row])
+                self.equity.sort_index(inplace=True)
+
+            # 값 업데이트
+            current_cash = float(self.equity.loc[date, 'cash'])
+            self.equity.loc[date, 'holdings'] = 0.0
+            self.equity.loc[date, 'cash'] = current_cash + revenue
 
             self.trades.append({
                 'date': date,
@@ -270,55 +328,62 @@ class SpotBacktester:
                 'size': holdings_to_sell
             })
             print(f"Exited {order_type} position: {holdings_to_sell:.4f} shares at ${current_price:.2f}")
+            
         except Exception as e:
             print(f"Exit trade failed: {e}")
 
     def calculate_equity_safe(self, data):
-        """안전한 자산 곡선 계산"""
+        """안전한 자산 곡선 계산 - 완전 수정"""
         try:
-            if self.equity is None:
+            if self.equity is None or self.equity.empty:
                 return
 
-            # Initialize the first row if it doesn't exist or is empty
-            if self.equity.empty or self.equity.iloc[0].isnull().any():
-                self.equity.iloc[0]['holdings'] = 0.0
-                self.equity.iloc[0]['cash'] = float(self.initial_capital)
-                self.equity.iloc[0]['total'] = float(self.initial_capital)
-                self.equity.iloc[0]['returns'] = 0.0
+            # 첫 번째 행 초기화
+            first_date = self.equity.index[0]
+            self.equity.loc[first_date, 'holdings'] = 0.0
+            self.equity.loc[first_date, 'cash'] = float(self.initial_capital)
+            self.equity.loc[first_date, 'total'] = float(self.initial_capital)
+            self.equity.loc[first_date, 'returns'] = 0.0
 
-            for i in range(1, len(data.index)):
-                date = data.index[i]
-                prev_date = data.index[i-1]
+            # 각 날짜별로 순차 계산
+            for i in range(len(self.equity.index)):
+                date = self.equity.index[i]
+                
+                if i > 0:
+                    prev_date = self.equity.index[i-1]
+                    # 이전 값들을 현재로 복사 (거래가 없는 경우)
+                    if pd.isna(self.equity.loc[date, 'holdings']):
+                        self.equity.loc[date, 'holdings'] = self.equity.loc[prev_date, 'holdings']
+                    if pd.isna(self.equity.loc[date, 'cash']):
+                        self.equity.loc[date, 'cash'] = self.equity.loc[prev_date, 'cash']
 
-                # Carry forward previous values if not updated by trades
-                if date not in self.equity.index:
-                    self.equity.loc[date] = self.equity.loc[prev_date].copy()
+                # 현재 가격으로 총 자산 계산
+                if date in data.index:
+                    current_price = float(data.loc[date, 'Close'])
+                    holdings_value = float(self.equity.loc[date, 'holdings']) * current_price
+                    cash_value = float(self.equity.loc[date, 'cash'])
+                    self.equity.loc[date, 'total'] = holdings_value + cash_value
 
-                current_price = data['Close'].iloc[i]
-
-                # Update holdings value based on current price if there are holdings
-                holdings_value = self.equity.loc[date, 'holdings'] * current_price
-                cash_value = self.equity.loc[date, 'cash']
-                self.equity.loc[date, 'total'] = holdings_value + cash_value
-
-            # Calculate returns after all total values are computed
+            # 수익률 계산
             self.equity['returns'] = self.equity['total'].pct_change().fillna(0)
 
         except Exception as e:
             print(f"Equity calculation failed: {e}")
 
     def get_performance(self):
-        """성과 분석 - 타입 안전성 강화"""
+        """성과 분석 - 타입 안전성 완전 강화"""
         try:
             if hasattr(self, 'equity') and self.equity is not None and not self.equity.empty:
                 # 히스토리컬 백테스팅 결과
                 final_value = float(self.equity['total'].iloc[-1])
+                initial_capital_float = float(self.initial_capital)
+                
                 return {
-                    'initial_capital': float(self.initial_capital),
+                    'initial_capital': initial_capital_float,
                     'final_value': final_value,
                     'total_trades': len(self.trades),
-                    'profit_loss': final_value - float(self.initial_capital),
-                    'returns': self.equity['returns'].tolist()
+                    'profit_loss': final_value - initial_capital_float,
+                    'returns': self.equity['returns'].fillna(0).tolist() if 'returns' in self.equity.columns else []
                 }
             else:
                 # 실시간 거래 결과
@@ -351,24 +416,27 @@ class SpotBacktester:
                 except (ValueError, TypeError):
                     balance_float = 0.0
 
+                initial_capital_float = float(self.initial_capital)
+
                 return {
-                    'initial_capital': float(self.initial_capital),
+                    'initial_capital': initial_capital_float,
                     'final_balance': balance_float,
                     'holdings_value': total_holdings_value,
                     'total_value': balance_float + total_holdings_value,
                     'total_trades': len(self.trades),
-                    'profit_loss': (balance_float + total_holdings_value) - float(self.initial_capital)
+                    'profit_loss': (balance_float + total_holdings_value) - initial_capital_float
                 }
 
         except Exception as e:
             print(f"Performance calculation failed: {e}")
+            initial_capital_float = float(self.initial_capital)
             return {
-                'initial_capital': float(self.initial_capital),
+                'initial_capital': initial_capital_float,
                 'final_balance': 0.0,
                 'holdings_value': 0.0,
                 'total_value': 0.0,
                 'total_trades': 0,
-                'profit_loss': -float(self.initial_capital)
+                'profit_loss': -initial_capital_float
             }
 
 # 하위 호환성을 위한 별칭

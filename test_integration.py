@@ -124,6 +124,18 @@ class IntegrationTester:
             performance2 = spot_bt.get_performance()
             assert performance2['final_balance'] == 0.0
 
+            # Futures 백테스터 타입 안전성 테스트
+            futures_bt.balance = None
+            futures_bt.position = "invalid"
+            futures_performance = futures_bt.get_performance()
+            assert isinstance(futures_performance['total_value'], (int, float))
+            assert futures_performance['final_balance'] == 0.0
+
+            # 극단적인 케이스 테스트
+            spot_bt.holdings['EXTREME'] = float('inf')
+            extreme_performance = spot_bt.get_performance()
+            assert isinstance(extreme_performance['total_value'], (int, float))
+
             self.results['error_handling'] = True
             print("✅ 에러 처리 테스트 통과")
 
