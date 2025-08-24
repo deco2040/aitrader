@@ -120,7 +120,6 @@ class FuturesBacktester:
 승률: {performance['winning_trades']}/{len([t for t in self.trades if t['type'] == 'sell'])}
 총 수수료: ${performance['total_commission_paid']:,.2f}
 """
-        """
         return report
 
 # SpotBacktester는 spot/spot_backtester.py에서 정의됨

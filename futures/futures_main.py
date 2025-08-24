@@ -1,7 +1,14 @@
+#!/usr/bin/env python3
+"""
+📈 Futures Trading Main Module
+- 선물 거래 메인 로직
+- Claude AI 통합 거래 시스템
+"""
+
 import sys
 import os
-from datetime import datetime
 from typing import Dict, Any, Optional
+from datetime import datetime
 
 # Add current directory to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
