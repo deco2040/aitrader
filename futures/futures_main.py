@@ -1,14 +1,21 @@
 from futures_claude_client import FuturesClaudeClient
 from futures_mcp_client import FuturesMCPClient
 from futures_time_based_trader import TimeBasedTradingManager
+from claude_enhanced_trader import ClaudeEnhancedTrader
 from futures_config import *
 import time
 
 class FuturesTrader:
-    def __init__(self, claude_client: FuturesClaudeClient, mcp_client: FuturesMCPClient):
+    def __init__(self, claude_client: FuturesClaudeClient, mcp_client: FuturesMCPClient, claude_api_key: str = None):
         self.claude_client = claude_client
         self.mcp_client = mcp_client
         self.time_manager = TimeBasedTradingManager()
+        
+        # Claude Enhanced Trader 추가 (차별화된 AI 분석)
+        if claude_api_key:
+            self.enhanced_trader = ClaudeEnhancedTrader(claude_api_key, mcp_client)
+        else:
+            self.enhanced_trader = None
 
     def execute_futures_trading_strategy(self, symbol: str, amount: float) -> bool:
         """
@@ -53,6 +60,76 @@ class FuturesTrader:
         except Exception as e:
             print(f"An error occurred during futures trading for {symbol}: {e}")
             return False
+
+    def execute_intelligent_trading_strategy(self, symbol: str) -> dict:
+        """
+        🧠 Claude Sonnet 4 기반 지능형 거래 전략 (차별화 포인트!)
+        - 뉴스/소셜 감정 분석
+        - 거시경제 맥락 이해  
+        - 숨겨진 패턴 발견
+        - 스토리텔링 기반 시장 해석
+        """
+        if not self.enhanced_trader:
+            print("❌ Claude Enhanced Trader가 설정되지 않았습니다.")
+            return {"success": False, "error": "Enhanced trader not available"}
+        
+        print(f"🚀 Claude 지능형 분석 시작: {symbol}")
+        
+        try:
+            # Claude의 고급 분석 실행
+            result = self.enhanced_trader.execute_intelligent_trade(symbol)
+            
+            print(f"✅ Claude 지능형 거래 완료")
+            print(f"📊 분석 결과: {result['claude_analysis']['action']}")
+            print(f"🎯 신뢰도: {result['claude_analysis']['confidence']}%")
+            
+            return {
+                "success": True,
+                "analysis": result['claude_analysis'],
+                "narrative": result['market_narrative'],
+                "execution": result['execution_result']
+            }
+            
+        except Exception as e:
+            print(f"❌ Claude 지능형 거래 오류: {e}")
+            return {"success": False, "error": str(e)}
+
+    def get_market_intelligence_report(self, symbol: str) -> str:
+        """
+        Claude가 생성하는 시장 인텔리전스 보고서
+        """
+        if not self.enhanced_trader:
+            return "Enhanced trader not available"
+        
+        try:
+            narrative = self.enhanced_trader.get_market_narrative(symbol)
+            signal = self.enhanced_trader.get_intelligent_trading_signal(symbol)
+            
+            report = f"""
+=== 🧠 Claude 시장 인텔리전스 보고서 ===
+심볼: {symbol}
+시간: {time.strftime('%Y-%m-%d %H:%M:%S')}
+
+📖 시장 해석:
+{narrative}
+
+📊 분석 결과:
+- 추천 행동: {signal.get('action', 'N/A')}
+- 신뢰도: {signal.get('confidence', 0)}%
+- 포지션 크기: {signal.get('position_size', 0)}
+- 근거: {signal.get('reasoning', 'N/A')}
+
+⚠️ 위험 요인:
+{', '.join(signal.get('risk_factors', []))}
+
+🔮 대안 시나리오:
+{', '.join(signal.get('alternative_scenarios', []))}
+            """
+            
+            return report
+            
+        except Exception as e:
+            return f"보고서 생성 오류: {e}"
 
     def get_futures_position(self, symbol: str):
         """
