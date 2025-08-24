@@ -1,9 +1,3 @@
-
-import pandas as pd
-import numpy as np
-import yfinance as yf
-from datetime import datetime, timedelta
-
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -20,7 +14,7 @@ class SpotBacktester:
         self.trades = []
         self.balance = initial_capital
         self.holdings = {}
-        
+
         if symbol and start_date and end_date:
             # 히스토리컬 백테스팅용
             self.equity = pd.DataFrame(index=self.get_data().index)
@@ -34,7 +28,7 @@ class SpotBacktester:
         if not self.symbol:
             print("Symbol not provided for data download")
             return pd.DataFrame()
-        
+
         try:
             print(f"Downloading data for {self.symbol} from {self.start_date} to {self.end_date}")
             df = yf.download(self.symbol, start=self.start_date, end=self.end_date, progress=False)
@@ -124,12 +118,12 @@ class SpotBacktester:
         if not self.symbol:
             print("Symbol not set for historical backtesting")
             return None
-            
+
         data = self.get_data()
         if data.empty:
             print("No data available")
             return None
-            
+
         signals = self.generate_signals(data)
         self.execute_trades(data, signals)
         self.calculate_equity(data)
@@ -229,10 +223,10 @@ class SpotBacktester:
             # 실시간 거래 결과 - 타입 안전성 개선
             total_holdings_value = 0
             for asset, quantity in self.holdings.items():
-                if isinstance(quantity, (int, float)):
-                    # 기본 가격을 45000으로 가정
-                    total_holdings_value += quantity * 45000
-            
+                # 기본 가격을 45000으로 가정 (타입 검증 추가)
+                if isinstance(quantity, (int, float)) and quantity > 0:
+                    total_holdings_value += float(quantity) * 45000
+
             return {
                 'initial_capital': self.initial_capital,
                 'final_balance': self.balance,

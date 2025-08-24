@@ -1,23 +1,25 @@
+import sys
+import os
 from datetime import datetime
-from .futures_claude_client import FuturesClaudeClient
-from .futures_mcp_client import FuturesMCPClient
-from .futures_time_based_trader import TimeBasedTradingManager
-from .claude_enhanced_trader import ClaudeEnhancedTrader
-from .futures_config import *
+from typing import Dict, Any, Optional
+
+# Add current directory to path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from futures_claude_client import FuturesClaudeClient
+from futures_mcp_client import FuturesMCPClient
+from futures_time_based_trader import TimeBasedTradingManager
+from claude_enhanced_trader import ClaudeEnhancedTrader
+from futures_backtester import FuturesBacktester # This import was in the edited snippet
 import time
 
 class FuturesTrader:
-    """
-    Main futures trading class that orchestrates all trading operations
-    """
+    """Futures 거래 메인 클래스"""
 
-    def __init__(self, claude_client, mcp_client, claude_api_key=None):
+    def __init__(self, claude_client: FuturesClaudeClient, mcp_client: FuturesMCPClient, claude_api_key: str):
         self.claude_client = claude_client
         self.mcp_client = mcp_client
-        self.claude_api_key = claude_api_key
-        self.time_manager = TimeBasedTradingManager()
-
-        # Initialize Claude Enhanced Trader if API key provided
+        # Initialize Claude Enhanced Trader with the provided API key
         if claude_api_key:
             try:
                 self.enhanced_trader = ClaudeEnhancedTrader(claude_api_key, mcp_client)
@@ -26,11 +28,11 @@ class FuturesTrader:
                 self.enhanced_trader = None
         else:
             self.enhanced_trader = None
+        self.time_manager = TimeBasedTradingManager() # Keep the original TimeBasedTradingManager initialization
+        print("FuturesTrader initialized successfully")
 
-    def execute_futures_trading_strategy(self, symbol: str, amount: float) -> dict:
-        """
-        Execute basic futures trading strategy
-        """
+    def execute_futures_trading_strategy(self, symbol: str, amount: float) -> Dict[str, Any]:
+        """기본 선물 거래 전략 실행"""
         print(f"Executing basic futures trading strategy for {symbol} with amount {amount}")
 
         try:
@@ -42,9 +44,11 @@ class FuturesTrader:
 
             # Execute trade based on signal
             if signal == "BUY":
-                result = self.mcp_client.place_order(symbol, amount, market_data['price'], 'market')
+                # Modified amount for order placement
+                result = self.mcp_client.place_order(symbol, amount * 0.001, market_data['price'], 'market')
             elif signal == "SELL":
-                result = self.mcp_client.place_order(symbol, -amount, market_data['price'], 'market')
+                # Modified amount for order placement
+                result = self.mcp_client.place_order(symbol, -amount * 0.001, market_data['price'], 'market')
             else:
                 result = {"status": "no_trade", "reason": "HOLD signal"}
 
@@ -60,7 +64,7 @@ class FuturesTrader:
             print(f"Error in execute_futures_trading_strategy: {e}")
             return {"success": False, "error": str(e)}
 
-    def execute_intelligent_trading_strategy(self, symbol: str) -> dict:
+    def execute_intelligent_trading_strategy(self, symbol: str) -> Dict[str, Any]:
         """
         Execute Claude enhanced intelligent trading strategy
         """
@@ -162,12 +166,12 @@ class FuturesTrader:
             current_position = self.get_futures_position(symbol=symbol)
             if current_position and current_position.get("size", 0) > 0:
                 print(f"Closing futures position for {symbol}...")
-                success = self.mcp_client.execute_sell_order(symbol=symbol, amount=current_position["size"])
+                success = self.mcp_client.execute_sell_order(symbol=symbol, amount=abs(current_position["size"])) # Use abs() for sell amount
                 print(f"Closed position for {symbol}. Success: {success}")
                 return success
             elif current_position and current_position.get("size", 0) < 0:
                 print(f"Closing futures position for {symbol}...")
-                success = self.mcp_client.execute_buy_order(symbol=symbol, amount=abs(current_position["size"]))
+                success = self.mcp_client.execute_buy_order(symbol=symbol, amount=abs(current_position["size"])) # Use abs() for buy amount
                 print(f"Closed position for {symbol}. Success: {success}")
                 return success
             else:
@@ -189,95 +193,86 @@ class FuturesTrader:
             print(f"An error occurred while getting futures account balance: {e}")
             return None
 
-if __name__ == '__main__':
-    # Futures 클라이언트 및 트레이더 인스턴스 생성 (예시)
-    print("Initializing Futures Trader...")
+def main():
+    """메인 실행 함수"""
+    try:
+        # 클라이언트 초기화 (Dummy clients from original __main__ block)
+        class DummyFuturesClaudeClient:
+            def generate_trading_signal(self, symbol: str, amount: float) -> str:
+                print(f"[DummyFuturesClaudeClient] Generating signal for {symbol} with amount {amount}")
+                if amount > 1000:
+                    return "BUY"
+                else:
+                    return "SELL"
 
-    # Dummy clients for demonstration
-    class DummyFuturesClaudeClient:
-        def generate_trading_signal(self, symbol: str, amount: float) -> str:
-            print(f"[DummyFuturesClaudeClient] Generating signal for {symbol} with amount {amount}")
-            if amount > 1000:
-                return "BUY"
-            else:
-                return "SELL"
+            def analyze_market_data(self, market_data: dict) -> dict:
+                print(f"[DummyFuturesClaudeClient] Analyzing market data: {market_data}")
+                return {"sentiment": "positive", "recommendation": "HOLD"}
 
-        def analyze_market_data(self, market_data: dict) -> dict:
-            print(f"[DummyFuturesClaudeClient] Analyzing market data: {market_data}")
-            return {"sentiment": "positive", "recommendation": "HOLD"}
+        class DummyFuturesMCPClient:
+            def __init__(self):
+                self.positions = {}
+                self.balance = {"available": 10000.0, "total": 10000.0}
 
-    class DummyFuturesMCPClient:
-        def __init__(self):
-            self.positions = {}
-            self.balance = {"available": 10000.0, "total": 10000.0}
+            def execute_buy_order(self, symbol: str, amount: float) -> bool:
+                print(f"[DummyFuturesMCPClient] Executing BUY order for {symbol} with amount {amount}")
+                current_size = self.positions.get(symbol, 0)
+                self.positions[symbol] = current_size + amount
+                self.balance["available"] -= amount
+                self.balance["total"] = self.balance["available"] + sum(self.positions.values())
+                return True
 
-        def execute_buy_order(self, symbol: str, amount: float) -> bool:
-            print(f"[DummyFuturesMCPClient] Executing BUY order for {symbol} with amount {amount}")
-            current_size = self.positions.get(symbol, 0)
-            self.positions[symbol] = current_size + amount
-            self.balance["available"] -= amount
-            self.balance["total"] = self.balance["available"] + sum(self.positions.values())
-            return True
+            def execute_sell_order(self, symbol: str, amount: float) -> bool:
+                print(f"[DummyFuturesMCPClient] Executing SELL order for {symbol} with amount {amount}")
+                current_size = self.positions.get(symbol, 0)
+                self.positions[symbol] = current_size - amount
+                self.balance["available"] += amount
+                self.balance["total"] = self.balance["available"] + sum(self.positions.values())
+                return True
 
-        def execute_sell_order(self, symbol: str, amount: float) -> bool:
-            print(f"[DummyFuturesMCPClient] Executing SELL order for {symbol} with amount {amount}")
-            current_size = self.positions.get(symbol, 0)
-            self.positions[symbol] = current_size - amount
-            self.balance["available"] += amount
-            self.balance["total"] = self.balance["available"] + sum(self.positions.values())
-            return True
+            def get_position(self, symbol: str) -> dict:
+                print(f"[DummyFuturesMCPClient] Getting position for {symbol}")
+                size = self.positions.get(symbol, 0)
+                return {"symbol": symbol, "size": size, "avg_entry_price": 100.0}
 
-        def get_position(self, symbol: str) -> dict:
-            print(f"[DummyFuturesMCPClient] Getting position for {symbol}")
-            size = self.positions.get(symbol, 0)
-            return {"symbol": symbol, "size": size, "avg_entry_price": 100.0}
+            def get_market_data(self, symbol: str) -> dict:
+                print(f"[DummyFuturesMCPClient] Getting market data for {symbol}")
+                return {"symbol": symbol, "price": 25000.0, "volume": 1000000.0, "funding_hours": 8}
 
-        def get_market_data(self, symbol: str) -> dict:
-            print(f"[DummyFuturesMCPClient] Getting market data for {symbol}")
-            return {"symbol": symbol, "price": 25000.0, "volume": 1000000.0, "funding_hours": 8}
+            def get_account_balance(self) -> dict:
+                print(f"[DummyFuturesMCPClient] Getting account balance")
+                return self.balance
 
-        def get_account_balance(self) -> dict:
-            print(f"[DummyFuturesMCPClient] Getting account balance")
-            return self.balance
+            def place_order(self, symbol: str, amount: float, price: float, order_type: str) -> dict:
+                print(f"[DummyFuturesMCPClient] Placing {order_type} order for {symbol}, Amount: {amount}, Price: {price}")
+                if order_type == 'market':
+                    if amount > 0:
+                        self.execute_buy_order(symbol, amount)
+                    elif amount < 0:
+                        self.execute_sell_order(symbol, abs(amount))
+                    return {"status": "filled", "symbol": symbol, "amount": amount, "price": price}
+                return {"status": "rejected", "reason": "Unsupported order type"}
 
-        def place_order(self, symbol: str, amount: float, price: float, order_type: str) -> dict:
-            print(f"[DummyFuturesMCPClient] Placing {order_type} order for {symbol}, Amount: {amount}, Price: {price}")
-            if order_type == 'market':
-                if amount > 0:
-                    self.execute_buy_order(symbol, amount)
-                elif amount < 0:
-                    self.execute_sell_order(symbol, abs(amount))
-                return {"status": "filled", "symbol": symbol, "amount": amount, "price": price}
-            return {"status": "rejected", "reason": "Unsupported order type"}
+        claude_client = DummyFuturesClaudeClient()
+        mcp_client = DummyFuturesMCPClient()
 
-    # 클라이언트 및 트레이더 초기화
-    claude_client = DummyFuturesClaudeClient()
-    mcp_client = DummyFuturesMCPClient()
-    trader = FuturesTrader(claude_client=claude_client, mcp_client=mcp_client)
+        # Futures Trader 초기화 with dummy clients and a dummy API key
+        trader = FuturesTrader(claude_client, mcp_client, "dummy_claude_api_key")
 
-    # 거래 시뮬레이션
-    symbol_to_trade = "BTC-PERPETUAL"
-    trade_amount = 1500.0
+        # 테스트 거래 실행
+        symbol_to_trade = "BTC/USDT"
+        trade_amount = 1000.0
+        result = trader.execute_futures_trading_strategy(symbol=symbol_to_trade, amount=trade_amount)
+        print(f"거래 결과: {result}")
 
-    print(f"\n--- Starting Futures Trading Simulation for {symbol_to_trade} ---")
+        # Market intelligence report example
+        report = trader.get_market_intelligence_report(symbol=symbol_to_trade)
+        print(f"\nMarket Intelligence Report:\n{report}")
 
-    # 시장 분석
-    analysis = trader.analyze_futures_market(symbol=symbol_to_trade)
+        print("\nFutures 거래 시스템 실행 완료")
 
-    # 거래 실행
-    trade_success = trader.execute_futures_trading_strategy(symbol=symbol_to_trade, amount=trade_amount)
+    except Exception as e:
+        print(f"메인 실행 오류: {e}")
 
-    # 포지션 확인
-    position = trader.get_futures_position(symbol=symbol_to_trade)
-
-    # 계정 잔액 확인
-    balance = trader.get_futures_account_balance()
-
-    # 포지션 청산 (예시)
-    print(f"\n--- Closing Futures Position for {symbol_to_trade} ---")
-    close_success = trader.close_futures_position(symbol=symbol_to_trade)
-
-    # 최종 잔액 확인
-    final_balance = trader.get_futures_account_balance()
-
-    print("\n--- Futures Trading Simulation Ended ---")
+if __name__ == "__main__":
+    main()
