@@ -226,8 +226,13 @@ class SpotBacktester:
                 'returns': self.equity['returns'].tolist()
             }
         else:
-            # 실시간 거래 결과
-            total_holdings_value = sum(quantity * 45000 for quantity in self.holdings.values())
+            # 실시간 거래 결과 - 타입 안전성 개선
+            total_holdings_value = 0
+            for asset, quantity in self.holdings.items():
+                if isinstance(quantity, (int, float)):
+                    # 기본 가격을 45000으로 가정
+                    total_holdings_value += quantity * 45000
+            
             return {
                 'initial_capital': self.initial_capital,
                 'final_balance': self.balance,

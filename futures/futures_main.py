@@ -31,45 +31,34 @@ class FuturesTrader:
         """
         Execute basic futures trading strategy
         """
+        print(f"Executing basic futures trading strategy for {symbol} with amount {amount}")
+
         try:
-            # 펀딩 시간 설정
-            self.funding_hours = [0, 8, 16]  # UTC 기준 펀딩 시간
+            # Get trading signal from Claude
+            signal = self.claude_client.generate_trading_signal(symbol, amount)
 
             # Get current market data
             market_data = self.mcp_client.get_market_data(symbol)
-            current_position = self.mcp_client.get_position(symbol)
 
-            # Get time-based trading recommendation
-            recommendation = self.time_manager.get_trading_recommendation()
-
-            print(f"Market data: {market_data}")
-            print(f"Trading recommendation: {recommendation}")
-
-            if not recommendation['should_trade']:
-                return {
-                    'success': True,
-                    'action': 'HOLD',
-                    'reason': recommendation['reason']
-                }
-
-            # Adjust amount based on time
-            adjusted_amount = self.time_manager.get_optimal_position_size(amount)
-
-            # Basic trading logic
-            signal = self.claude_client.generate_trading_signal(symbol, adjusted_amount)
-
-            if signal == "BUY" and current_position.get('size', 0) <= 0:
-                success = self.mcp_client.execute_buy_order(symbol, adjusted_amount)
-                return {'success': success, 'action': 'BUY', 'amount': adjusted_amount}
-            elif signal == "SELL" and current_position.get('size', 0) > 0:
-                success = self.mcp_client.execute_sell_order(symbol, adjusted_amount)
-                return {'success': success, 'action': 'SELL', 'amount': adjusted_amount}
+            # Execute trade based on signal
+            if signal == "BUY":
+                result = self.mcp_client.place_order(symbol, amount, market_data['price'], 'market')
+            elif signal == "SELL":
+                result = self.mcp_client.place_order(symbol, -amount, market_data['price'], 'market')
             else:
-                return {'success': True, 'action': 'HOLD', 'reason': 'No trading signal'}
+                result = {"status": "no_trade", "reason": "HOLD signal"}
+
+            return {
+                "success": True,
+                "signal": signal,
+                "market_data": market_data,
+                "execution_result": result,
+                "funding_hours": market_data.get('funding_hours', 8)  # Default funding hours
+            }
 
         except Exception as e:
             print(f"Error in execute_futures_trading_strategy: {e}")
-            return {'success': False, 'error': str(e)}
+            return {"success": False, "error": str(e)}
 
     def execute_intelligent_trading_strategy(self, symbol: str) -> dict:
         """
@@ -245,11 +234,21 @@ if __name__ == '__main__':
 
         def get_market_data(self, symbol: str) -> dict:
             print(f"[DummyFuturesMCPClient] Getting market data for {symbol}")
-            return {"symbol": symbol, "price": 25000.0, "volume": 1000000.0}
+            return {"symbol": symbol, "price": 25000.0, "volume": 1000000.0, "funding_hours": 8}
 
         def get_account_balance(self) -> dict:
             print(f"[DummyFuturesMCPClient] Getting account balance")
             return self.balance
+
+        def place_order(self, symbol: str, amount: float, price: float, order_type: str) -> dict:
+            print(f"[DummyFuturesMCPClient] Placing {order_type} order for {symbol}, Amount: {amount}, Price: {price}")
+            if order_type == 'market':
+                if amount > 0:
+                    self.execute_buy_order(symbol, amount)
+                elif amount < 0:
+                    self.execute_sell_order(symbol, abs(amount))
+                return {"status": "filled", "symbol": symbol, "amount": amount, "price": price}
+            return {"status": "rejected", "reason": "Unsupported order type"}
 
     # 클라이언트 및 트레이더 초기화
     claude_client = DummyFuturesClaudeClient()
