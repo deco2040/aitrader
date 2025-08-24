@@ -1,11 +1,14 @@
 from futures_claude_client import FuturesClaudeClient
 from futures_mcp_client import FuturesMCPClient
+from futures_time_based_trader import TimeBasedTradingManager
 from futures_config import *
+import time
 
 class FuturesTrader:
     def __init__(self, claude_client: FuturesClaudeClient, mcp_client: FuturesMCPClient):
         self.claude_client = claude_client
         self.mcp_client = mcp_client
+        self.time_manager = TimeBasedTradingManager()
 
     def execute_futures_trading_strategy(self, symbol: str, amount: float) -> bool:
         """
@@ -19,6 +22,18 @@ class FuturesTrader:
             bool: 거래 성공 여부.
         """
         try:
+            # 시간대 기반 거래 검증
+            trading_recommendation = self.time_manager.get_trading_recommendation()
+            print(f"Trading recommendation: {trading_recommendation}")
+            
+            if not trading_recommendation['should_trade']:
+                print(f"Trading avoided: {trading_recommendation['reason']}")
+                return False
+            
+            # 시간대에 따른 포지션 크기 조정
+            adjusted_amount = self.time_manager.get_optimal_position_size(amount)
+            print(f"Original amount: {amount}, Adjusted amount: {adjusted_amount}")
+            amount = adjusted_amount
             # Claude API를 사용하여 거래 신호 생성
             signal = self.claude_client.generate_trading_signal(symbol=symbol, amount=amount)
             print(f"Generated signal for {symbol}: {signal}")
