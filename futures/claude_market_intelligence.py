@@ -1,4 +1,3 @@
-
 import json
 import requests
 from datetime import datetime, timedelta
@@ -13,56 +12,56 @@ class ClaudeMarketIntelligence:
     - 패턴 인식 및 예측
     - 멀티모달 차트 분석
     """
-    
+
     def __init__(self, api_key: str):
         self.client = anthropic.Anthropic(api_key=api_key)
         self.model = "claude-3-5-sonnet-20241022"
-        
+
     def analyze_market_context(self, symbol: str, price_data: dict, news_data: list) -> dict:
         """
         Claude를 활용한 종합적 시장 맥락 분석
         """
         prompt = f"""
         You are an elite cryptocurrency futures trader and market analyst operating a 24-hour automated trading system.
-        
+
         TARGET: 0.5% daily profit through strategic position splitting and calculated risk-taking.
         RISK TOLERANCE: Maximum 20% drawdown allowed - aggressive but controlled.
         PHILOSOPHY: Embrace calculated risks, don't fear liquidation, but manage it intelligently.
-        
+
         Analyze the current {symbol} market situation:
-        
+
         Price Data:
         {json.dumps(price_data, indent=2)}
-        
+
         Recent News:
         {json.dumps(news_data, indent=2)}
-        
+
         ANALYZE THE DATA STEP-BY-STEP:
-        
+
         STEP 1: PRICE ACTION ANALYSIS
         - Current price trend (1h, 4h, 12h timeframes)
         - Support/resistance levels identification
         - Volume profile analysis
         - Price momentum indicators (RSI, MACD divergences)
-        
+
         STEP 2: MARKET STRUCTURE EVALUATION
         - Market phase identification (accumulation/distribution/trending)
         - Order book analysis (bid/ask imbalances)
         - Funding rate implications
         - Open interest changes
-        
+
         STEP 3: NEWS & SENTIMENT IMPACT ASSESSMENT
         - News sentiment scoring (-100 to +100)
         - Social media sentiment analysis
         - Correlation with price movements
         - Expected impact duration (1h/4h/12h/24h+)
-        
+
         STEP 4: VOLATILITY & RISK ANALYSIS
         - Current volatility percentile
         - Expected volatility in next 1-4 hours
         - Liquidation cascade risk assessment
         - Market maker vs retail sentiment
-        
+
         STEP 5: LEVERAGE OPTIMIZATION
         - Calculate optimal leverage based on:
           * Current market volatility
@@ -71,27 +70,27 @@ class ClaudeMarketIntelligence:
           * Expected move size
         - Dynamic leverage adjustment (5x-20x scale)
         - Risk-per-trade calculation
-        
+
         STEP 6: TIMING ANALYSIS
         - Current market session characteristics
         - Funding time proximity (00:00, 08:00, 16:00 UTC)
         - Optimal entry/exit windows
         - Session transition volatility patterns
-        
+
         STEP 7: POSITION STRATEGY FORMULATION
         - Entry strategy (single/split/DCA approach)
         - Position sizing per entry
         - Stop-loss placement strategy
         - Take-profit ladder setup
-        
+
         STEP 8: REAL-TIME STRATEGY ADAPTATION
         - Market condition changes monitoring
         - Leverage adjustment triggers
         - Position size modification conditions
         - Exit strategy modifications
-        
+
         Provide analysis considering:
-        
+
         1. IMMEDIATE PROFIT OPPORTUNITIES (next 1-4 hours for 0.1-0.3% gains)
         2. POSITION SPLITTING STRATEGY (multiple entries vs single large position)
         3. DYNAMIC LEVERAGE CALCULATION (5x-20x based on market conditions)
@@ -100,7 +99,7 @@ class ClaudeMarketIntelligence:
         6. VOLATILITY EXPLOITATION (how to profit from price swings)
         7. RISK-REWARD OPTIMIZATION (targeting 0.5% daily with <20% max loss)
         8. REAL-TIME STRATEGY MODIFICATION (adaptive to changing conditions)
-        
+
         Respond in JSON format:
         {{
             "step_by_step_analysis": {{
@@ -175,7 +174,24 @@ class ClaudeMarketIntelligence:
                 "adjustment_reason": "volatility/trend/news/risk",
                 "next_review": "15min/30min/1h/2h"
             }},
-            "action_recommendation": "aggressive_long/moderate_long/scalp_long/hold/scalp_short/moderate_short/aggressive_short",
+            "action_recommendation": "aggressive_long/moderate_long/scalp_long/hold_long/wait_for_setup/scalp_short/moderate_short/hold_short/aggressive_short",
+            "confidence": 0-100,
+            "total_position_allocation": 0.1-1.0,
+            "strategy_type": "scalp/swing/hold",
+            "expected_hold_time": "5min/15min/1h/4h/12h/24h",
+            "entry_strategy": {{
+                "type": "single/split_3/split_5/dca",
+                "first_entry": 0.3-0.6,
+                "second_entry": 0.2-0.4,
+                "third_entry": 0.1-0.3
+            }},
+            "holding_strategy": {{
+                "scalp_vs_hold_decision": "scalp_better/hold_better/mixed_approach",
+                "hold_justification": "strong_trend/momentum_continuation/news_catalyst/technical_pattern",
+                "max_hold_time": "1h/4h/12h/24h",
+                "hold_conditions": ["trend_intact", "volume_support", "no_reversal_signals"],
+                "early_exit_triggers": ["momentum_loss", "volume_decline", "reversal_pattern", "time_limit"]
+            }},
             "reasoning": "detailed step-by-step analysis summary focusing on profit opportunity and risk management",
             "entry_levels": {{
                 "primary": price,
@@ -195,37 +211,37 @@ class ClaudeMarketIntelligence:
             }}
         }}
         """
-        
+
         try:
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=2000,
                 messages=[{"role": "user", "content": prompt}]
             )
-            
+
             analysis = json.loads(response.content[0].text)
             return analysis
-            
+
         except Exception as e:
             print(f"Claude 분석 오류: {e}")
             return {"error": str(e)}
-    
+
     def analyze_social_sentiment(self, social_data: list) -> dict:
         """
         소셜 미디어 감정 분석 (Twitter, Reddit, 텔레그램)
         """
         prompt = f"""
         다음 소셜 미디어 데이터를 분석하여 암호화폐 시장 감정을 파악해주세요:
-        
+
         {json.dumps(social_data, indent=2)}
-        
+
         분석 요청사항:
         1. 전체적인 감정 점수 (-100 ~ +100)
         2. 주요 테마 및 키워드
         3. 영향력 있는 계정들의 논조
         4. 공포/탐욕 지수
         5. 밈/트렌드 영향도
-        
+
         JSON으로 응답:
         {{
             "sentiment_score": -100 to 100,
@@ -236,41 +252,41 @@ class ClaudeMarketIntelligence:
             "viral_content": ["content1", "content2"]
         }}
         """
-        
+
         try:
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=1000,
                 messages=[{"role": "user", "content": prompt}]
             )
-            
+
             return json.loads(response.content[0].text)
-            
+
         except Exception as e:
             return {"error": str(e)}
-    
+
     def predict_volatility_events(self, historical_data: list, upcoming_events: list) -> dict:
         """
         Claude의 패턴 인식을 활용한 변동성 예측
         """
         prompt = f"""
         VOLATILITY PREDICTION for 24-hour futures trading system targeting 0.5% daily profit.
-        
+
         Historical Data:
         {json.dumps(historical_data[-100:], indent=2)}
-        
+
         Upcoming Events:
         {json.dumps(upcoming_events, indent=2)}
-        
+
         Predict volatility with focus on PROFIT OPPORTUNITIES:
-        
+
         1. Next 1-4 hours: Quick scalp opportunities (0.1-0.3% moves)
         2. Next 4-12 hours: Swing opportunities (0.3-0.8% moves) 
         3. Next 12-24 hours: Position trading opportunities (0.5-1.5% moves)
         4. FUNDING TIMES impact (00:00, 08:00, 16:00 UTC)
         5. SESSION TRANSITIONS (Asia->Europe->US volatility patterns)
         6. NEWS/EVENT driven volatility windows
-        
+
         JSON Response:
         {{
             "volatility_probability_1h": 0-100,
@@ -297,48 +313,48 @@ class ClaudeMarketIntelligence:
             "preparation_strategy": "aggressive_long/moderate_long/reduce_exposure/aggressive_short/moderate_short"
         }}
         """
-        
+
         try:
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=1000,
                 messages=[{"role": "user", "content": prompt}]
             )
-            
+
             return json.loads(response.content[0].text)
-            
+
         except Exception as e:
             return {"error": str(e)}
-    
+
     def generate_narrative_analysis(self, market_data: dict) -> str:
         """
         시장 상황을 스토리텔링으로 설명
         """
         prompt = f"""
         현재 시장 상황을 마치 경험 많은 트레이더가 후배에게 설명하듯 서술해주세요:
-        
+
         시장 데이터:
         {json.dumps(market_data, indent=2)}
-        
+
         다음 요소들을 포함해서 설명해주세요:
         1. 현재 무엇이 일어나고 있는가?
         2. 왜 이런 움직임이 나타나는가?
         3. 다른 트레이더들은 어떻게 생각하고 있을까?
         4. 다음에 일어날 가능성이 높은 시나리오는?
         5. 어떤 함정이나 위험이 숨어있을까?
-        
+
         전문적이지만 이해하기 쉽게 설명해주세요.
         """
-        
+
         try:
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=1500,
                 messages=[{"role": "user", "content": prompt}]
             )
-            
+
             return response.content[0].text
-            
+
         except Exception as e:
             return f"분석 생성 오류: {e}"
 
@@ -346,7 +362,7 @@ class MarketDataCollector:
     """
     Claude 분석을 위한 다양한 데이터 수집
     """
-    
+
     def __init__(self):
         self.data_sources = {
             'news': 'https://api.newsapi.org/v2/everything',
@@ -354,7 +370,7 @@ class MarketDataCollector:
             'fear_greed': 'https://api.alternative.me/fng/',
             'economic': 'https://api.economicalendar.com/events'
         }
-    
+
     def collect_news_data(self, symbol: str, hours: int = 24) -> list:
         """
         최근 뉴스 수집
@@ -377,7 +393,7 @@ class MarketDataCollector:
             }
         ]
         return mock_news
-    
+
     def collect_social_data(self, symbol: str) -> list:
         """
         소셜 미디어 데이터 수집
@@ -400,7 +416,7 @@ class MarketDataCollector:
             }
         ]
         return mock_social
-    
+
     def collect_economic_calendar(self) -> list:
         """
         경제 지표 일정 수집

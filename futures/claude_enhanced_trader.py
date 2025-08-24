@@ -99,9 +99,10 @@ class ClaudeEnhancedTrader:
         """
         # Claude의 종합 판단을 위한 메타 분석
         synthesis_prompt = f"""
-        TRADING SYSTEM: 24-hour automated futures trading targeting 0.5% daily profit
+        TRADING SYSTEM: 24/7 automated futures trading targeting 0.5% daily profit
+        TRADING STYLE: Primarily scalping (5min-2h) but can hold positions (4h-24h) when more profitable
         RISK PARAMETERS: Maximum 20% drawdown tolerance, intelligent liquidation management
-        APPROACH: Aggressive but calculated, position splitting for risk control
+        APPROACH: Aggressive but calculated, adaptive holding time based on market conditions
         
         STEP-BY-STEP FINAL DECISION SYNTHESIS:
         
@@ -121,11 +122,18 @@ class ClaudeEnhancedTrader:
         - Calculate risk per individual position
         - Set position size scaling rules
         
-        STEP 4: REAL-TIME STRATEGY ADAPTATION PLANNING
+        STEP 4: HOLDING vs SCALPING OPTIMIZATION
+        - Compare profit potential: Quick scalp (0.1-0.3% in 5min-2h) vs Hold (0.5-2% in 4h-24h)
+        - Analyze trend strength and momentum for holding decisions
+        - Risk-adjusted return comparison between strategies
+        - Consider market volatility and session timing
+        
+        STEP 5: REAL-TIME STRATEGY ADAPTATION PLANNING
         - Define conditions for strategy modifications
         - Set leverage increase/decrease triggers
         - Plan position size adjustments
         - Define exit strategy modifications
+        - Holding time extension/reduction triggers
         
         Make the final trading decision considering:
         - Can we achieve 0.1-0.3% profit in next 2-6 hours?
@@ -137,9 +145,21 @@ class ClaudeEnhancedTrader:
         
         Final Decision JSON:
         {{
-            "action": "aggressive_long/moderate_long/scalp_long/wait_for_setup/scalp_short/moderate_short/aggressive_short",
+            "action": "aggressive_long/moderate_long/scalp_long/hold_long/wait_for_setup/scalp_short/moderate_short/hold_short/aggressive_short",
             "confidence": 0-100,
             "total_position_allocation": 0.1-1.0,
+            "strategy_type": "scalp/swing/hold",
+            "holding_analysis": {{
+                "scalp_profit_potential": "0.1-0.3% in 5min-2h",
+                "hold_profit_potential": "0.5-2.0% in 4h-24h", 
+                "preferred_strategy": "scalp/hold/mixed",
+                "reasoning": "trend_strength/volatility/session_timing",
+                "risk_adjusted_return": {{
+                    "scalp_ratio": 0.1-10,
+                    "hold_ratio": 0.1-10,
+                    "winner": "scalp/hold"
+                }}
+            }},
             "entry_strategy": {{
                 "type": "single/split_3/split_5/dca",
                 "first_entry": 0.3-0.6,
@@ -196,7 +216,21 @@ class ClaudeEnhancedTrader:
                 "tp2": "price (0.3-0.5% profit)",
                 "tp3": "price (0.8-1.2% profit)"
             }},
-            "max_hold_time": "15min/1h/4h/12h",
+            "holding_strategy": {{
+                "max_hold_time": "5min/1h/4h/12h/24h",
+                "dynamic_adjustments": {{
+                    "extend_hold_conditions": ["strong_momentum", "trend_acceleration", "volume_increase"],
+                    "reduce_hold_conditions": ["momentum_weakness", "volume_decline", "reversal_signals"],
+                    "force_exit_conditions": ["stop_loss_hit", "time_limit", "major_reversal"]
+                }},
+                "risk_management": {{
+                    "scalp_stop_loss": "tight_0.1-0.2%",
+                    "hold_stop_loss": "wider_0.3-0.8%",
+                    "trailing_stop": "enabled_for_holds",
+                    "time_based_exit": "enabled",
+                    "profit_protection": "scale_out_25-50-75%"
+                }}
+            }},
             "leverage_usage": 5-20,
             "liquidation_buffer": "percentage distance to liquidation",
             "reasoning": "detailed step-by-step justification focusing on profit probability, risk management, and adaptive strategy",
