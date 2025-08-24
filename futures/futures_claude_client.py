@@ -17,6 +17,32 @@ class FuturesClaudeClient:
         """
         print(f"Placing {order_type} order for {quantity} of {symbol} at {price} using API key {self.api_key}")
         return {"order_id": "futures_order_123", "symbol": symbol, "status": "placed"}
+    
+    def generate_trading_signal(self, symbol: str, amount: float) -> str:
+        """
+        Generate trading signal for the given symbol and amount
+        """
+        # 더미 신호 생성 로직
+        import random
+        signals = ["BUY", "SELL", "HOLD"]
+        return random.choice(signals)
+    
+    def analyze_market_data(self, market_data: dict) -> dict:
+        """
+        Analyze market data and return analysis results
+        """
+        return {
+            "analysis": "Market analysis completed",
+            "trend": "neutral",
+            "volatility": "medium"
+        }
+    
+    def get_futures_position(self, symbol: str) -> dict:
+        """
+        Get current futures position for the symbol
+        """
+        print(f"Getting futures position for {symbol}")
+        return {"symbol": symbol, "quantity": 0, "entry_price": 0}
 
     def get_futures_position(self, symbol: str) -> dict:
         """

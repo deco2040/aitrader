@@ -76,6 +76,38 @@ class FuturesMCPClient:
         print(f"Cancelling futures order {order_id}...")
         # Placeholder for actual API call to cancel futures order
         return {"order_id": order_id, "status": "cancelled"}
+    
+    def execute_buy_order(self, symbol: str, amount: float) -> bool:
+        """
+        Execute a buy order for the given symbol and amount
+        """
+        print(f"Executing buy order: {symbol}, amount: {amount}")
+        return True
+    
+    def execute_sell_order(self, symbol: str, amount: float) -> bool:
+        """
+        Execute a sell order for the given symbol and amount
+        """
+        print(f"Executing sell order: {symbol}, amount: {amount}")
+        return True
+    
+    def get_position(self, symbol: str) -> dict:
+        """
+        Get position for the given symbol
+        """
+        return {"symbol": symbol, "size": 0, "avg_entry_price": 0}
+    
+    def get_market_data(self, symbol: str) -> dict:
+        """
+        Get market data for the given symbol
+        """
+        return {"symbol": symbol, "price": 45000.0, "volume": 1000000}
+    
+    def get_account_balance(self) -> dict:
+        """
+        Get account balance information
+        """
+        return {"available": 10000.0, "total": 10000.0}
 
 class FuturesMarketData:
     """

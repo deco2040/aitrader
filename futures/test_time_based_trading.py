@@ -1,5 +1,5 @@
 
-from futures_time_based_trader import TimeBasedTradingManager
+from .futures_time_based_trader import TimeBasedTradingManager
 import datetime
 
 def test_time_based_trading():

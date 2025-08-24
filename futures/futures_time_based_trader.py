@@ -1,6 +1,6 @@
 import datetime
 from typing import Dict, List
-from futures_config import TIME_BASED_LEVERAGE, FEES, SCALPING_MODE
+from .futures_config import TIME_BASED_LEVERAGE, FEES, SCALPING_MODE
 
 class TimeBasedTradingManager:
     def __init__(self):

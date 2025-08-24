@@ -1,9 +1,124 @@
-from futures.futures_claude_client import FuturesClaudeClient
-from futures.futures_mcp_client import FuturesMCPClient
-from futures.futures_time_based_trader import TimeBasedTradingManager
-from futures.claude_enhanced_trader import ClaudeEnhancedTrader
-from futures.futures_config import *
+from .futures_claude_client import FuturesClaudeClient
+from .futures_mcp_client import FuturesMCPClient
+from .futures_time_based_trader import TimeBasedTradingManager
+from .claude_enhanced_trader import ClaudeEnhancedTrader
+from .futures_config import *
 import time
+
+class FuturesTrader:
+    """
+    Main futures trading class that orchestrates all trading operations
+    """
+    
+    def __init__(self, claude_client, mcp_client, claude_api_key=None):
+        self.claude_client = claude_client
+        self.mcp_client = mcp_client
+        self.claude_api_key = claude_api_key
+        self.time_manager = TimeBasedTradingManager()
+        
+        # Initialize Claude Enhanced Trader if API key provided
+        if claude_api_key:
+            try:
+                self.enhanced_trader = ClaudeEnhancedTrader(claude_api_key)
+            except Exception as e:
+                print(f"Warning: Could not initialize ClaudeEnhancedTrader: {e}")
+                self.enhanced_trader = None
+        else:
+            self.enhanced_trader = None
+    
+    def execute_futures_trading_strategy(self, symbol: str, amount: float) -> dict:
+        """
+        Execute basic futures trading strategy
+        """
+        try:
+            # Get current market data
+            market_data = self.mcp_client.get_market_data(symbol)
+            current_position = self.mcp_client.get_position(symbol)
+            
+            # Get time-based trading recommendation
+            recommendation = self.time_manager.get_trading_recommendation()
+            
+            print(f"Market data: {market_data}")
+            print(f"Trading recommendation: {recommendation}")
+            
+            if not recommendation['should_trade']:
+                return {
+                    'success': True,
+                    'action': 'HOLD',
+                    'reason': recommendation['reason']
+                }
+            
+            # Basic trading logic
+            signal = self.claude_client.generate_trading_signal(symbol, amount)
+            
+            if signal == "BUY" and current_position.get('size', 0) <= 0:
+                success = self.mcp_client.execute_buy_order(symbol, amount)
+                return {'success': success, 'action': 'BUY', 'amount': amount}
+            elif signal == "SELL" and current_position.get('size', 0) > 0:
+                success = self.mcp_client.execute_sell_order(symbol, amount)
+                return {'success': success, 'action': 'SELL', 'amount': amount}
+            else:
+                return {'success': True, 'action': 'HOLD', 'reason': 'No trading signal'}
+                
+        except Exception as e:
+            print(f"Error in execute_futures_trading_strategy: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def execute_intelligent_trading_strategy(self, symbol: str) -> dict:
+        """
+        Execute Claude enhanced intelligent trading strategy
+        """
+        if not self.enhanced_trader:
+            return {
+                'success': False,
+                'error': 'Claude Enhanced Trader not available'
+            }
+        
+        try:
+            # Use Claude enhanced analysis
+            analysis = self.enhanced_trader.analyze_market_with_claude(symbol)
+            return {
+                'success': True,
+                'analysis': analysis
+            }
+        except Exception as e:
+            print(f"Error in execute_intelligent_trading_strategy: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def get_market_intelligence_report(self, symbol: str) -> str:
+        """
+        Generate market intelligence report
+        """
+        try:
+            market_data = self.mcp_client.get_market_data(symbol)
+            position = self.mcp_client.get_position(symbol)
+            balance = self.mcp_client.get_account_balance()
+            recommendation = self.time_manager.get_trading_recommendation()
+            
+            report = f"""
+🧠 Claude 시장 인텔리전스 보고서
+================================
+📊 심볼: {symbol}
+💰 현재가: ${market_data.get('price', 'N/A')}
+📈 거래량: {market_data.get('volume', 'N/A')}
+🎯 포지션: {position.get('size', 0)}
+💵 계정잔액: ${balance.get('available', 'N/A')}
+
+⏰ 시간대 분석:
+- 현재 UTC 시간: {recommendation['current_hour_utc']}시
+- 고거래량 시간대: {'예' if recommendation['is_high_volume'] else '아니오'}
+- 펀딩 시간 근접: {'예' if recommendation['near_funding'] else '아니오'}
+- 거래 권장: {'예' if recommendation['should_trade'] else '아니오'}
+- 추천 이유: {recommendation['reason']}
+
+🔍 AI 분석 결과:
+- 레버리지 배수: {recommendation['leverage_multiplier']}x
+- 시장 상황: {'활발' if recommendation['is_high_volume'] else '조용'}
+"""
+            return report
+            
+        except Exception as e:
+            return f"보고서 생성 중 오류: {str(e)}"
 
 class FuturesTrader:
     def __init__(self, claude_client: FuturesClaudeClient, mcp_client: FuturesMCPClient, claude_api_key: str = None):
