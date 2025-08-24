@@ -4,6 +4,11 @@ import numpy as np
 import yfinance as yf
 from datetime import datetime, timedelta
 
+import pandas as pd
+import numpy as np
+import yfinance as yf
+from datetime import datetime, timedelta
+
 class SpotBacktester:
     def __init__(self, symbol=None, start_date=None, end_date=None, initial_capital=10000, commission_rate=0.001, slippage_rate=0.001):
         self.symbol = symbol

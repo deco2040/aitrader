@@ -163,7 +163,7 @@ class TradingSystemTester:
             
             # 기본 거래 전략 테스트
             basic_result = trader.execute_futures_trading_strategy("BTC/USDT", 1000)
-            print(f"✅ 기본 거래 전략 결과: {basic_result}")
+            print(f"✅ 기본 거래 전략 결과: {basic_result.get('success', False)}")
             
             # 지능형 거래 전략 테스트
             intelligent_result = trader.execute_intelligent_trading_strategy("BTC/USDT")
@@ -177,6 +177,23 @@ class TradingSystemTester:
             # 시장 인텔리전스 보고서 테스트
             report = trader.get_market_intelligence_report("BTC/USDT")
             print(f"✅ 인텔리전스 보고서 생성됨 (길이: {len(report)} 문자)")
+            
+            # Spot 시스템도 테스트
+            try:
+                from spot.spot_ai_trader import SpotAITrader
+                spot_trader = SpotAITrader()
+                print("✅ Spot AI Trader 초기화 성공")
+                
+                # Spot Backtester 테스트
+                from spot.spot_backtester import SpotBacktester
+                spot_backtester = SpotBacktester(initial_capital=5000)
+                spot_backtester.buy("BTC", 50000, 0.1)
+                spot_backtester.sell("BTC", 52000, 0.05)
+                spot_performance = spot_backtester.get_performance()
+                print(f"✅ Spot 백테스터 손익: ${spot_performance['profit_loss']:.2f}")
+                
+            except Exception as spot_e:
+                print(f"⚠️ Spot 시스템 테스트 부분 실패: {spot_e}")
             
             self.test_results['integrated_system'] = True
             

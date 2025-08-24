@@ -1,4 +1,4 @@
-
+from datetime import datetime
 from .futures_claude_client import FuturesClaudeClient
 from .futures_mcp_client import FuturesMCPClient
 from .futures_time_based_trader import TimeBasedTradingManager
@@ -10,13 +10,13 @@ class FuturesTrader:
     """
     Main futures trading class that orchestrates all trading operations
     """
-    
+
     def __init__(self, claude_client, mcp_client, claude_api_key=None):
         self.claude_client = claude_client
         self.mcp_client = mcp_client
         self.claude_api_key = claude_api_key
         self.time_manager = TimeBasedTradingManager()
-        
+
         # Initialize Claude Enhanced Trader if API key provided
         if claude_api_key:
             try:
@@ -26,7 +26,7 @@ class FuturesTrader:
                 self.enhanced_trader = None
         else:
             self.enhanced_trader = None
-    
+
     def execute_futures_trading_strategy(self, symbol: str, amount: float) -> dict:
         """
         Execute basic futures trading strategy
@@ -35,26 +35,26 @@ class FuturesTrader:
             # Get current market data
             market_data = self.mcp_client.get_market_data(symbol)
             current_position = self.mcp_client.get_position(symbol)
-            
+
             # Get time-based trading recommendation
             recommendation = self.time_manager.get_trading_recommendation()
-            
+
             print(f"Market data: {market_data}")
             print(f"Trading recommendation: {recommendation}")
-            
+
             if not recommendation['should_trade']:
                 return {
                     'success': True,
                     'action': 'HOLD',
                     'reason': recommendation['reason']
                 }
-            
+
             # Adjust amount based on time
             adjusted_amount = self.time_manager.get_optimal_position_size(amount)
-            
+
             # Basic trading logic
             signal = self.claude_client.generate_trading_signal(symbol, adjusted_amount)
-            
+
             if signal == "BUY" and current_position.get('size', 0) <= 0:
                 success = self.mcp_client.execute_buy_order(symbol, adjusted_amount)
                 return {'success': success, 'action': 'BUY', 'amount': adjusted_amount}
@@ -63,11 +63,11 @@ class FuturesTrader:
                 return {'success': success, 'action': 'SELL', 'amount': adjusted_amount}
             else:
                 return {'success': True, 'action': 'HOLD', 'reason': 'No trading signal'}
-                
+
         except Exception as e:
             print(f"Error in execute_futures_trading_strategy: {e}")
             return {'success': False, 'error': str(e)}
-    
+
     def execute_intelligent_trading_strategy(self, symbol: str) -> dict:
         """
         Execute Claude enhanced intelligent trading strategy
@@ -77,7 +77,7 @@ class FuturesTrader:
                 'success': False,
                 'error': 'Claude Enhanced Trader not available'
             }
-        
+
         try:
             # Use Claude enhanced analysis
             result = self.enhanced_trader.execute_intelligent_trade(symbol)
@@ -90,7 +90,7 @@ class FuturesTrader:
         except Exception as e:
             print(f"Error in execute_intelligent_trading_strategy: {e}")
             return {'success': False, 'error': str(e)}
-    
+
     def get_market_intelligence_report(self, symbol: str) -> str:
         """
         Generate market intelligence report
@@ -100,7 +100,7 @@ class FuturesTrader:
             position = self.mcp_client.get_position(symbol)
             balance = self.mcp_client.get_account_balance()
             recommendation = self.time_manager.get_trading_recommendation()
-            
+
             report = f"""
 🧠 Claude 시장 인텔리전스 보고서
 ================================
@@ -121,7 +121,7 @@ class FuturesTrader:
 - 레버리지 배수: {recommendation['leverage_multiplier']}x
 - 시장 상황: {'활발' if recommendation['is_high_volume'] else '조용'}
 """
-            
+
             # Enhanced trader analysis if available
             if self.enhanced_trader:
                 signal = self.enhanced_trader.get_intelligent_trading_signal(symbol)
@@ -131,9 +131,9 @@ class FuturesTrader:
 - 신뢰도: {signal.get('confidence', 0)}%
 - 근거: {signal.get('reasoning', 'N/A')}
 """
-            
+
             return report
-            
+
         except Exception as e:
             return f"보고서 생성 중 오류: {str(e)}"
 
@@ -200,7 +200,7 @@ class FuturesTrader:
 if __name__ == '__main__':
     # Futures 클라이언트 및 트레이더 인스턴스 생성 (예시)
     print("Initializing Futures Trader...")
-    
+
     # Dummy clients for demonstration
     class DummyFuturesClaudeClient:
         def generate_trading_signal(self, symbol: str, amount: float) -> str:
@@ -209,7 +209,7 @@ if __name__ == '__main__':
                 return "BUY"
             else:
                 return "SELL"
-        
+
         def analyze_market_data(self, market_data: dict) -> dict:
             print(f"[DummyFuturesClaudeClient] Analyzing market data: {market_data}")
             return {"sentiment": "positive", "recommendation": "HOLD"}
@@ -258,10 +258,10 @@ if __name__ == '__main__':
     trade_amount = 1500.0
 
     print(f"\n--- Starting Futures Trading Simulation for {symbol_to_trade} ---")
-    
+
     # 시장 분석
     analysis = trader.analyze_futures_market(symbol=symbol_to_trade)
-    
+
     # 거래 실행
     trade_success = trader.execute_futures_trading_strategy(symbol=symbol_to_trade, amount=trade_amount)
 
@@ -274,7 +274,7 @@ if __name__ == '__main__':
     # 포지션 청산 (예시)
     print(f"\n--- Closing Futures Position for {symbol_to_trade} ---")
     close_success = trader.close_futures_position(symbol=symbol_to_trade)
-    
+
     # 최종 잔액 확인
     final_balance = trader.get_futures_account_balance()
 
