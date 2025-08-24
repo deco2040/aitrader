@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from futures.futures_main import FuturesTrader
-from futures.claude_enhanced_trader import ClaudeEnhancedTrader
+from futures.claude_enhanced_trader import ClaudeEnhancedTraderTrader
 from futures.futures_backtester import FuturesBacktester
 
 class TradingSystemTester:
