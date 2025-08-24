@@ -227,14 +227,15 @@ class SpotBacktester:
             for asset, quantity in self.holdings.items():
                 try:
                     # None 체크 및 타입 변환
-                    if quantity is None:
+                    if quantity is None or quantity == 0:
                         continue
                     
-                    # 문자열인 경우 float로 변환
-                    if isinstance(quantity, str):
-                        quantity_float = float(quantity)
-                    else:
-                        quantity_float = float(quantity)
+                    # 문자열, 리스트 등 잘못된 타입 체크
+                    if isinstance(quantity, (str, list, dict)):
+                        print(f"Warning: Invalid quantity type for {asset}: {type(quantity)}")
+                        continue
+                        
+                    quantity_float = float(quantity)
                     
                     if quantity_float > 0:
                         price = default_prices.get(asset, 100.0)
