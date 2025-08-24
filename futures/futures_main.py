@@ -32,6 +32,9 @@ class FuturesTrader:
         Execute basic futures trading strategy
         """
         try:
+            # 펀딩 시간 설정
+            self.funding_hours = [0, 8, 16]  # UTC 기준 펀딩 시간
+
             # Get current market data
             market_data = self.mcp_client.get_market_data(symbol)
             current_position = self.mcp_client.get_position(symbol)

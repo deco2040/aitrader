@@ -134,19 +134,30 @@ class ComprehensiveBacktestRunner:
             
             print(f"테스트 기간: {start_date.strftime('%Y-%m-%d')} ~ {end_date.strftime('%Y-%m-%d')}")
             
-            # 백테스팅 실행 (실제 야후 파이낸스 데이터가 필요하므로 시뮬레이션)
-            print("히스토리컬 백테스팅 시뮬레이션 실행...")
-            
-            # 시뮬레이션된 결과
-            simulated_performance = {
-                'initial_capital': 10000,
-                'final_value': 10500,
-                'profit_loss': 500,
-                'total_trades': 12,
-                'returns': [0.02, -0.01, 0.015, 0.008, -0.005]
-            }
-            
-            self.results['historical'] = simulated_performance
+            # 실제 백테스팅 시도, 실패 시 시뮬레이션
+            try:
+                print("실제 히스토리컬 데이터로 백테스팅 시도...")
+                equity_curve = backtester.backtest()
+                if equity_curve is not None and not equity_curve.empty:
+                    performance = backtester.get_performance()
+                    self.results['historical'] = performance
+                    print("✅ 실제 데이터 백테스팅 성공")
+                else:
+                    raise Exception("No historical data available")
+            except Exception as data_error:
+                print(f"실제 데이터 사용 실패: {data_error}")
+                print("시뮬레이션 모드로 전환...")
+                
+                # 시뮬레이션된 결과
+                simulated_performance = {
+                    'initial_capital': 10000,
+                    'final_value': 10500,
+                    'profit_loss': 500,
+                    'total_trades': 12,
+                    'returns': [0.02, -0.01, 0.015, 0.008, -0.005]
+                }
+                
+                self.results['historical'] = simulated_performance
             
             print(f"✅ 히스토리컬 백테스팅 (시뮬레이션) 결과:")
             print(f"   초기 자본: ${simulated_performance['initial_capital']:,}")

@@ -56,3 +56,32 @@ SCALPING_MODE = {
     "min_profit_target": 0.5,
     "max_hold_time": 300  # 초
 }
+"""
+Futures 거래 시스템 설정 파일
+"""
+
+# 거래 시간 설정 (UTC 기준)
+FUNDING_HOURS = [0, 8, 16]  # 펀딩 시간
+TRADING_HOURS = list(range(0, 24))  # 거래 가능 시간
+
+# 백테스팅 설정
+DEFAULT_INITIAL_CAPITAL = 10000
+DEFAULT_COMMISSION_RATE = 0.001
+DEFAULT_SLIPPAGE_RATE = 0.001
+
+# API 설정
+MAX_RETRY_ATTEMPTS = 3
+REQUEST_TIMEOUT = 30
+
+# 리스크 관리
+MAX_POSITION_SIZE = 0.1  # 포트폴리오의 10%
+STOP_LOSS_PERCENT = 0.05  # 5% 손절
+TAKE_PROFIT_PERCENT = 0.1  # 10% 익절
+
+# 거래 쌍 설정
+SUPPORTED_SYMBOLS = [
+    "BTC/USDT",
+    "ETH/USDT", 
+    "SOL/USDT",
+    "BNB/USDT"
+]

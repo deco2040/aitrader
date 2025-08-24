@@ -32,9 +32,20 @@ class SpotBacktester:
     def get_data(self):
         """야후 파이낸스에서 데이터 가져오기"""
         if not self.symbol:
+            print("Symbol not provided for data download")
             return pd.DataFrame()
-        df = yf.download(self.symbol, start=self.start_date, end=self.end_date)
-        return df
+        
+        try:
+            print(f"Downloading data for {self.symbol} from {self.start_date} to {self.end_date}")
+            df = yf.download(self.symbol, start=self.start_date, end=self.end_date, progress=False)
+            if df.empty:
+                print(f"No data found for symbol {self.symbol}")
+            else:
+                print(f"Successfully downloaded {len(df)} data points")
+            return df
+        except Exception as e:
+            print(f"Error downloading data for {self.symbol}: {e}")
+            return pd.DataFrame()
 
     def buy(self, asset_or_price, price_or_quantity, quantity=None):
         """매수 주문"""
