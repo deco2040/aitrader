@@ -120,15 +120,7 @@ class FuturesBacktester:
 승률: {performance['winning_trades']}/{len([t for t in self.trades if t['type'] == 'sell'])}
 총 수수료: ${performance['total_commission_paid']:,.2f}
 """
-        return reportn_value']:,.2f}
-총 자산 가치: ${performance['total_value']:,.2f}
-손익: ${performance['profit_loss']:,.2f}
-수익률: {performance['roi_percent']:.2f}%
-최대 손실폭: {performance['max_drawdown_percent']:.2f}%
-총 거래 수: {performance['total_trades']}
-승률: {performance['winning_trades']}/{len([t for t in self.trades if t['type'] == 'sell'])}
-총 수수료: ${performance['total_commission_paid']:,.2f}
-"""
+        """
         return report
 
 # SpotBacktester는 spot/spot_backtester.py에서 정의됨

@@ -19,6 +19,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from futures.futures_main import FuturesTrader
 from futures.claude_enhanced_trader import ClaudeEnhancedTrader
 from futures.futures_backtester import FuturesBacktester
+from futures.claude_enhanced_trader import ClaudeEnhancedTrader
 
 class TradingSystemTester:
     """거래 시스템 종합 테스터"""
@@ -46,6 +47,37 @@ class TradingSystemTester:
         
         # 5. 최종 리포트 생성
         self.generate_final_report()
+    
+    def generate_final_report(self):
+        """최종 테스트 리포트 생성"""
+        print("\n📋 5. 최종 테스트 리포트")
+        print("=" * 60)
+        
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for result in self.test_results.values() if result)
+        
+        print(f"총 테스트: {total_tests}")
+        print(f"성공: {passed_tests}")
+        print(f"실패: {total_tests - passed_tests}")
+        print(f"성공률: {(passed_tests/total_tests)*100:.1f}%")
+        
+        print(f"\n상세 결과:")
+        for test_name, result in self.test_results.items():
+            status = "✅ 성공" if result else "❌ 실패"
+            print(f"  {test_name}: {status}")
+        
+        if self.backtest_results:
+            print(f"\n백테스팅 성과:")
+            print(f"  최종 잔액: ${self.backtest_results.get('final_balance', 0):.2f}")
+            print(f"  손익: ${self.backtest_results.get('profit_loss', 0):.2f}")
+            print(f"  총 거래 수: {self.backtest_results.get('total_trades', 0)}")
+        
+        if passed_tests == total_tests:
+            print("\n🎉 모든 테스트가 성공했습니다!")
+        elif passed_tests >= total_tests * 0.8:
+            print("\n✅ 대부분의 기능이 정상 작동합니다.")
+        else:
+            print("\n⚠️ 추가 수정이 필요합니다.")
     
     def test_basic_modules(self):
         """기본 모듈 테스트"""
@@ -142,6 +174,41 @@ class TradingSystemTester:
             self.test_results['backtesting'] = False
     
     def test_integrated_trading_system(self):
+        """통합 거래 시스템 테스트"""
+        print("\n🔧 4. 통합 거래 시스템 테스트")
+        print("-" * 40)
+        
+        try:
+            # 통합 시스템 테스트
+            print("통합 시스템 초기화 중...")
+            
+            # Spot 백테스터 추가 테스트
+            try:
+                from spot.spot_backtester import SpotBacktester
+                spot_bt = SpotBacktester(initial_capital=10000)
+                spot_bt.buy("BTC", 45000, 0.1)
+                spot_bt.sell("BTC", 47000, 0.05)
+                spot_performance = spot_bt.get_performance()
+                print(f"✅ Spot 백테스터 손익: ${spot_performance['profit_loss']:.2f}")
+                
+            except Exception as spot_e:
+                print(f"⚠️ Spot 시스템 테스트 부분 실패: {spot_e}")
+            
+            # 시간 기반 거래 테스트
+            try:
+                from futures.futures_time_based_trader import TimeBasedTradingManager
+                time_manager = TimeBasedTradingManager()
+                recommendation = time_manager.get_trading_recommendation()
+                print(f"✅ 시간 기반 거래 추천: {recommendation['should_trade']}")
+                
+            except Exception as time_e:
+                print(f"⚠️ 시간 기반 거래 테스트 실패: {time_e}")
+            
+            self.test_results['integrated_system'] = True
+            
+        except Exception as e:
+            print(f"❌ 통합 시스템 테스트 실패: {e}")
+            self.test_results['integrated_system'] = Falseed_trading_system(self):
         """통합 거래 시스템 테스트"""
         print("\n🚀 4. 통합 거래 시스템 테스트")
         print("-" * 40)

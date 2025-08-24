@@ -1,11 +1,16 @@
+#!/usr/bin/env python3
+"""
+⏰ 시간 기반 거래 로직 테스트
+- 거래량 시간대 분석
+- 펀딩 시간 회피 로직
+- 레버리지 최적화
+"""
 
-<old_str>import sys
+import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from futures_time_based_trader import TimeBasedTradingManager
-import datetime datetime</old_str>
-<new_str>from futures_time_based_trader import TimeBasedTradingManager
 import datetime
 
 def test_time_based_trading():
@@ -38,6 +43,15 @@ def test_time_based_trading():
         for key, value in recommendation.items():
             print(f"{key}: {value}")
         
+        print("\n✅ 시간대 기반 거래 테스트 완료")
+        
+    except Exception as e:
+        print(f"❌ 테스트 실패: {e}")
+
+if __name__ == "__main__":
+    test_time_based_trading() key, value in recommendation.items():
+            print(f"{key}: {value}")
+        
         # 24시간 시뮬레이션
         print(f"\n=== 24시간 거래 시뮬레이션 ===")
         for hour in range(24):
@@ -53,4 +67,4 @@ def test_time_based_trading():
         return False
 
 if __name__ == "__main__":
-    test_time_based_trading()</old_str>
+    test_time_based_trading()

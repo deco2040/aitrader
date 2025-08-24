@@ -116,3 +116,39 @@ TRADING_HOURS = {
     "active_end": 22,    # UTC
     "funding_times": [0, 8, 16]  # UTC 시간
 }
+# Futures Trading Configuration
+
+# Time-based leverage settings
+TIME_BASED_LEVERAGE = {
+    "high_volume": 2.0,
+    "low_volume": 1.5,
+    "funding_time": 1.0
+}
+
+# Fee configuration
+FEES = {
+    "maker": 0.0002,
+    "taker": 0.0004,
+    "funding": 0.0001
+}
+
+# Scalping mode settings
+SCALPING_MODE = {
+    "enabled": True,
+    "min_profit": 0.001,
+    "max_hold_time": 300  # seconds
+}
+
+# Trading hours (UTC)
+TRADING_HOURS = {
+    "active_start": 8,
+    "active_end": 18,
+    "funding_times": [0, 8, 16]  # UTC hours
+}
+
+# Risk management
+RISK_MANAGEMENT = {
+    "max_position_size": 0.1,
+    "stop_loss": 0.02,
+    "take_profit": 0.03
+}
